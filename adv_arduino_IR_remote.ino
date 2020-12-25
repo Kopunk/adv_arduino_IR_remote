@@ -14,8 +14,8 @@ void loop() {
 }
 
 
-char ButtonRead() {
-  int buttonVal = analogRead(A0);
+char ButtonRead(int buttonVal) {
+  //int buttonVal = analogRead(A0);
   if (buttonVal >= 1023) { // nothing pressed
     return 0;
   }
@@ -34,10 +34,9 @@ char ButtonRead() {
   else if (buttonVal > 600) { // SELECT
     return 's';
   }
-  
 }
 
-void Menu(byte rows, char list[][14]) { // strzaleczka w lewo - char 127
+void Menu(byte rows, char list[][14]) {
   char button;
   bool buttonReleased = true;
   //String option[] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //temp
@@ -59,12 +58,12 @@ void Menu(byte rows, char list[][14]) { // strzaleczka w lewo - char 127
     }
 
     do {
-      button = ButtonRead();
+      button = ButtonRead(analogRead(A0));
       delay(2);
-    } while (button == ButtonRead());
+    } while (button == ButtonRead(analogRead(A0)));
 
     if (button) {
-      if (button == 's') { // SELECT
+      if (button == 's' || button == 'r') { // SELECT or RIGHT
         //lcd.print("Select");
       }
       else if (button == 'u') { // UP
