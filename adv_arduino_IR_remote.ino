@@ -2,47 +2,64 @@
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
+// placeholder voids
+//void forwardIR() {}
+
+// ALL MENU CONTENTS
+const byte maxColumns = 14;
+const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
+const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
+const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
+
+
+char choice = -1;
+char subchoice = -1;
+
 void setup() {
   lcd.begin(16, 2);
-  byte rows = 5;
-  char option[rows][14] = {"Option 1\0", "-Option 2\0", "Option 3\0", "--Option 4\0", "-Option 5\0"}; //temp
-  Menu(rows, option);
 }
 
 void loop() {
-  //Menu();
-}
-
-
-char ButtonRead() {
-  int buttonVal = analogRead(A0);
-  if (buttonVal >= 1023) { // nothing pressed
-    return 0;
-  }
-  else if (buttonVal <= 50) { // RIGHT
-    return 'r';
-  }
-  else if (buttonVal > 50 && buttonVal <= 200) { // UP
-    return 'u';
-  }
-  else if (buttonVal > 200 && buttonVal <= 350) { // DOWN
-    return 'd';
-  }
-  else if (buttonVal > 350 && buttonVal <= 600) { // LEFT
-    return 'l';
-  }
-  else if (buttonVal > 600) { // SELECT
-    return 's';
-  }
+  choice = Menu((sizeof(menuMain)/sizeof(menuMain[0])), menuMain);
   
+  switch(choice) {
+    
+    case 0: // "Forward IR"
+      lcd.print("Forward IR");
+      delay(2000);
+      break;
+      
+    case 1: // "Send IR"
+      subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
+      if(subchoice >= 0) {
+        lcd.print(menuSend[subchoice]);
+        delay(2000);
+      }
+      break;
+      
+    case 2: // "Receive IR"
+      lcd.print("Receive IR");
+      delay(2000);
+      break;
+      
+    case 3: // "Connect PC"
+      lcd.print("Connect PC");
+      delay(2000);
+      break;
+
+    case 4: // "Settings"
+      lcd.print("Settings");
+      delay(2000);
+      break;
+
+  }
 }
 
-void Menu(byte rows, char list[][14]) { // strzaleczka w lewo - char 127
+char Menu(const byte rows, const char list[][maxColumns]) {
   char button;
   bool buttonReleased = true;
-  //String option[] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //temp
   bool selectedUpperRow = true;
-  byte currTopOption = 0;
+  char currTopOption = 0;
   
   while (true) {
     
@@ -59,13 +76,18 @@ void Menu(byte rows, char list[][14]) { // strzaleczka w lewo - char 127
     }
 
     do {
-      button = ButtonRead();
+      button = ButtonRead(analogRead(A0));
       delay(2);
-    } while (button == ButtonRead());
+    } while (button == ButtonRead(analogRead(A0)));
 
     if (button) {
-      if (button == 's') { // SELECT
-        //lcd.print("Select");
+      if (button == 's' || button == 'r') { // SELECT or RIGHT
+        lcd.clear();
+        return currTopOption + byte(!selectedUpperRow);
+      }
+      else if (button == 'l') { // LEFT
+        lcd.clear();
+        return -1;
       }
       else if (button == 'u') { // UP
         if (selectedUpperRow) {
@@ -88,5 +110,27 @@ void Menu(byte rows, char list[][14]) { // strzaleczka w lewo - char 127
         }
       }
     }
+  }
+}
+
+char ButtonRead(int buttonVal) {
+  //int buttonVal = analogRead(A0);
+  if (buttonVal >= 950) { // nothing pressed
+    return 0;
+  }
+  else if (buttonVal <= 50) { // RIGHT
+    return 'r';
+  }
+  else if (buttonVal > 50 && buttonVal <= 200) { // UP
+    return 'u';
+  }
+  else if (buttonVal > 200 && buttonVal <= 350) { // DOWN
+    return 'd';
+  }
+  else if (buttonVal > 350 && buttonVal <= 600) { // LEFT
+    return 'l';
+  }
+  else if (buttonVal > 600) { // SELECT
+    return 's';
   }
 }
