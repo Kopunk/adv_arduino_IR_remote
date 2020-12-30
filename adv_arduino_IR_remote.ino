@@ -1,4 +1,5 @@
-#include <LiquidCrystal.h>
+#include "LiquidCrystal/src/LiquidCrystal.cpp"
+//#include "IRremote/src/IRremote.cpp"
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
