@@ -1,5 +1,5 @@
 #include "LiquidCrystal/src/LiquidCrystal.cpp"
-#include "IRremote/src/IRremote.cpp"
+//#include "IRremote/src/IRremote.cpp"
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
@@ -133,24 +133,5 @@ char ButtonRead(int buttonVal) {
   }
   else if (buttonVal > 600) { // SELECT
     return 's';
-  }
-}
-
-void sendIR(long signals[], String protocol="LG"){
-  IRsend irsend;
-  /*
-   * This function sends specified IR signals using specified protocol.
-   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
-   * The pin used to send signals is digital pin 3 - it is hard coded in the
-   * IRremote library, so I decided not to try to change it.
-   */
-  for(int x = 0; x < sizeof(signals); x++){
-    for(int i = 0; i < 3; i++){
-      if(protocol == "LG"){
-        irsend.sendLG(signals[x], 32);
-        //Serial.println(signals[x]); //Debug
-      }
-    }
-    delay(2000);;
   }
 }
