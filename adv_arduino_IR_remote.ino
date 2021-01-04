@@ -1,12 +1,16 @@
-#include "LiquidCrystal/src/LiquidCrystal.cpp"
-//#include "IRremote/src/IRremote.cpp"
+#include <LiquidCrystal.h>
+#include <IRremote.h>
+#include <EEPROM.h>
 
+
+
+const int irPin = 3;
+IRrecv irrecv(irPin);
+decode_results results;
+IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-// placeholder voids
-//void forwardIR() {}
 
-// ALL MENU CONTENTS
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
@@ -16,8 +20,66 @@ const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4",
 char choice = -1;
 char subchoice = -1;
 
+
+int eeAddress = 0;
+
+
+void sendIR(const long signals[], const int len, const String protocol="LG"){
+  /*
+   * This function sends specified IR signals using specified protocol.
+   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
+   * The pin used to send signals is digital pin 3 - it is hard coded in the
+   * IRremote library, so I decided not to try to change it.
+   */
+  for(int x = 0; x < len; x++){
+    for(int i = 0; i < 3; i++){
+      if(protocol == "LG"){
+        irsend.sendLG(signals[x], 32);
+        Serial.println(signals[x]); //Debug
+        delay(500);
+      }
+    }
+    delay(2000);
+  }
+}
+
+long receiveSignal(){
+  while(true){
+    if(irrecv.decode(&results)){
+      Serial.println(results.value, HEX); // Debug
+      irrecv.resume();
+      return results.value;
+    }
+  }
+}
+
+void saveToEEPROM(int addr, long value){
+  EEPROM.put(addr, value);
+  eeAddress += sizeof(long);
+}
+
+long readHexFromEEPROM(int addr, int howMuch = 4){
+  String y = "";
+  long x = 0;
+  for(int i = addr; i < howMuch; i++){
+    x = EEPROM.read(i);
+    if(x <= 15){
+      y = "0" + String(x, HEX) + y;
+    }
+    else{
+      y = String(EEPROM.read(i), HEX) + y;
+    }
+  }
+  y.toUpperCase();
+  //Serial.println(y); //Debug
+  return strtol(y.c_str(), NULL, 16);
+}
+
+
 void setup() {
+  // put your setup code here, to run once:
   lcd.begin(16, 2);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -31,11 +93,13 @@ void loop() {
       break;
       
     case 1: // "Send IR"
+    
       subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
       if(subchoice >= 0) {
         lcd.print(menuSend[subchoice]);
         delay(2000);
       }
+      
       break;
       
     case 2: // "Receive IR"
@@ -54,6 +118,7 @@ void loop() {
       break;
 
   }
+
 }
 
 char Menu(const byte rows, const char list[][maxColumns]) {

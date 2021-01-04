@@ -1,6 +1,0 @@
-[submodule "LiquidCrystal"]
-	path = LiquidCrystal
-	url = https://github.com/arduino-libraries/LiquidCrystal.git
-[submodule "IRremote"]
-	path = IRremote
-	url = https://github.com/Arduino-IRremote/Arduino-IRremote.git
