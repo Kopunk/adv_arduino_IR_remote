@@ -92,17 +92,13 @@ void loop() {
       break;
       
     case 1: // "Send IR"
-    /*
+    
       subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
       if(subchoice >= 0) {
         lcd.print(menuSend[subchoice]);
         delay(2000);
       }
-      */
-      const long signals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F};
-      //those signals on my tv correspond to - respectively - volume up, volume down, source
-      //note that different tv's answer to different signals
-      sendIR(signals, (sizeof(signals)/sizeof(signals[0])));
+      
       break;
       
     case 2: // "Receive IR"
