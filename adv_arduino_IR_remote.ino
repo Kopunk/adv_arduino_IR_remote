@@ -1,12 +1,12 @@
-#include "LiquidCrystal/src/LiquidCrystal.cpp"
-#include "IRremote/src/IRremote.cpp"
+//#include "LiquidCrystal/src/LiquidCrystal.cpp"
+//#include "IRremote/src/IRremote.cpp"
+#include <IRremote.h>
+#include <LiquidCrystal.h>
 
+IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-// placeholder voids
-//void forwardIR() {}
 
-// ALL MENU CONTENTS
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
@@ -16,8 +16,32 @@ const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4",
 char choice = -1;
 char subchoice = -1;
 
+
+void sendIR(const long signals[], const int len, const String protocol="LG"){
+  /*
+   * This function sends specified IR signals using specified protocol.
+   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
+   * The pin used to send signals is digital pin 3 - it is hard coded in the
+   * IRremote library, so I decided not to try to change it.
+   */
+  for(int x = 0; x < len; x++){
+    for(int i = 0; i < 3; i++){
+      if(protocol == "LG"){
+        irsend.sendLG(signals[x], 32);
+        Serial.println(signals[x]); //Debug
+        delay(500);
+      }
+    }
+    delay(2000);
+  }
+}
+
+
+
 void setup() {
+  // put your setup code here, to run once:
   lcd.begin(16, 2);
+  Serial.begin(9600);
 }
 
 void loop() {
@@ -31,11 +55,17 @@ void loop() {
       break;
       
     case 1: // "Send IR"
+    /*
       subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
       if(subchoice >= 0) {
         lcd.print(menuSend[subchoice]);
         delay(2000);
       }
+      */
+      const long signals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F};
+      //those signals on my tv correspond to - respectively - volume up, volume down, source
+      //note that different tv's answer to different signals
+      sendIR(signals, (sizeof(signals)/sizeof(signals[0])));
       break;
       
     case 2: // "Receive IR"
@@ -54,6 +84,7 @@ void loop() {
       break;
 
   }
+
 }
 
 char Menu(const byte rows, const char list[][maxColumns]) {
@@ -133,24 +164,5 @@ char ButtonRead(int buttonVal) {
   }
   else if (buttonVal > 600) { // SELECT
     return 's';
-  }
-}
-
-void sendIR(long signals[], String protocol="LG"){
-  IRsend irsend;
-  /*
-   * This function sends specified IR signals using specified protocol.
-   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
-   * The pin used to send signals is digital pin 3 - it is hard coded in the
-   * IRremote library, so I decided not to try to change it.
-   */
-  for(int x = 0; x < sizeof(signals); x++){
-    for(int i = 0; i < 3; i++){
-      if(protocol == "LG"){
-        irsend.sendLG(signals[x], 32);
-        //Serial.println(signals[x]); //Debug
-      }
-    }
-    delay(2000);;
   }
 }
