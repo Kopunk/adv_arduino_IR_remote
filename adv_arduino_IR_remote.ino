@@ -3,7 +3,6 @@
 #include <EEPROM.h>
 
 
-
 const int irPin = 3;
 IRrecv irrecv(irPin);
 decode_results results;
@@ -11,10 +10,12 @@ IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 
+// menu constants
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
-const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
+// user defined menus
+char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
 
 
 char choice = -1;
@@ -23,6 +24,49 @@ char subchoice = -1;
 
 int eeAddress = 0;
 
+
+void setup() {
+  // put your setup code here, to run once:
+  lcd.begin(16, 2);
+  Serial.begin(9600);
+}
+
+void loop() {
+  choice = Menu((sizeof(menuMain)/sizeof(menuMain[0])), menuMain);
+  
+  switch(choice) {
+    
+    case 0: // "Forward IR"
+      lcd.print("Forward IR");
+      delay(2000);
+      break;
+      
+    case 1: // "Send IR"
+//      subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
+//      if(subchoice >= 0) {
+//        lcd.print(menuSend[subchoice]);
+//        delay(2000);
+//      }
+      sendIR();
+      break;
+      
+    case 2: // "Receive IR"
+      lcd.print("Receive IR");
+      delay(2000);
+      break;
+      
+    case 3: // "Connect PC"
+      lcd.print("Connect PC");
+      delay(2000);
+      break;
+
+    case 4: // "Settings"
+      lcd.print("Settings");
+      delay(2000);
+      break;
+
+  }
+}
 
 void sendIR(const long signals[], const int len, const String protocol="LG"){
   /*
@@ -73,52 +117,6 @@ long readHexFromEEPROM(int addr, int howMuch = 4){
   y.toUpperCase();
   //Serial.println(y); //Debug
   return strtol(y.c_str(), NULL, 16);
-}
-
-
-void setup() {
-  // put your setup code here, to run once:
-  lcd.begin(16, 2);
-  Serial.begin(9600);
-}
-
-void loop() {
-  choice = Menu((sizeof(menuMain)/sizeof(menuMain[0])), menuMain);
-  
-  switch(choice) {
-    
-    case 0: // "Forward IR"
-      lcd.print("Forward IR");
-      delay(2000);
-      break;
-      
-    case 1: // "Send IR"
-    
-      subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
-      if(subchoice >= 0) {
-        lcd.print(menuSend[subchoice]);
-        delay(2000);
-      }
-      
-      break;
-      
-    case 2: // "Receive IR"
-      lcd.print("Receive IR");
-      delay(2000);
-      break;
-      
-    case 3: // "Connect PC"
-      lcd.print("Connect PC");
-      delay(2000);
-      break;
-
-    case 4: // "Settings"
-      lcd.print("Settings");
-      delay(2000);
-      break;
-
-  }
-
 }
 
 char Menu(const byte rows, const char list[][maxColumns]) {
