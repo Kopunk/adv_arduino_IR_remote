@@ -14,10 +14,10 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
-// user defined menus
+// menus available for user option naming
 char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
 
-
+// variables for handling Menu() in loop()
 char choice = -1;
 char subchoice = -1;
 
@@ -26,6 +26,7 @@ int eeAddress = 0;
 
 // testing purposes
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
+
 
 // functions ----------
 
@@ -81,6 +82,15 @@ long readHexFromEEPROM(int addr, int howMuch = 4) {
 }
 
 char Menu(const byte rows, const char list[][maxColumns]) {
+  /*
+     Returns index of chosen element of list[] - menu option
+     returns -1 when going back (left) was chosen.
+     Displays simple scrollable menu with
+     arrow (char 127) indicating current choice.
+     up / down - navigation
+     right / select - select option (return)
+     left - go back (return -1)
+  */
   char button;
   bool buttonReleased = true;
   bool selectedUpperRow = true;
@@ -139,7 +149,10 @@ char Menu(const byte rows, const char list[][maxColumns]) {
 }
 
 char ButtonRead(int buttonVal) {
-  //int buttonVal = analogRead(A0);
+  /*
+     Returns lowercase first character of button name
+     given buttonVal - usually analogRead(A0)
+  */
   if (buttonVal >= 950) { // nothing pressed
     return 0;
   }
@@ -160,10 +173,10 @@ char ButtonRead(int buttonVal) {
   }
 }
 
+
 // setup() and loop() ----------
 
 void setup() {
-  // put your setup code here, to run once:
   lcd.begin(16, 2);
   Serial.begin(9600);
 }
@@ -179,12 +192,12 @@ void loop() {
       break;
 
     case 1: // "Send IR"
-      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
-      if (subchoice >= 0) {
-        lcd.print(menuSend[subchoice]);
-        delay(2000);
-      }
-      //sendIR(testsignals, (sizeof(testsignals) / sizeof(testsignals[0])));
+      //      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
+      //      if (subchoice >= 0) {
+      //        lcd.print(menuSend[subchoice]);
+      //        delay(2000);
+      //      }
+      sendIR(testsignals, (sizeof(testsignals) / sizeof(testsignals[0])));
       break;
 
     case 2: // "Receive IR"
