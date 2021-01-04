@@ -1,7 +1,13 @@
 #include "LiquidCrystal/src/LiquidCrystal.cpp"
 //#include "IRremote/src/IRremote.cpp"
 #include <IRremote.h>
+//#include "EEPROM/EEPROM.cpp"
+#include <EEPROM.h>
 
+
+const int irPin = 3;
+IRrecv irrecv(irPin);
+decode_results results;
 IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
@@ -14,6 +20,9 @@ const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4",
 
 char choice = -1;
 char subchoice = -1;
+
+
+int eeAddress = 0;
 
 
 void sendIR(const long signals[], const int len, const String protocol="LG"){
@@ -35,6 +44,37 @@ void sendIR(const long signals[], const int len, const String protocol="LG"){
   }
 }
 
+long receiveSignal(){
+  while(true){
+    if(irrecv.decode(&results)){
+      Serial.println(results.value, HEX); // Debug
+      irrecv.resume();
+      return results.value;
+    }
+  }
+}
+
+void saveToEEPROM(int addr, long value){
+  EEPROM.put(addr, value);
+  eeAddress += sizeof(long);
+}
+
+long readHexFromEEPROM(int addr, int howMuch = 4){
+  String y = "";
+  long x = 0;
+  for(int i = addr; i < howMuch; i++){
+    x = EEPROM.read(i);
+    if(x <= 15){
+      y = "0" + String(x, HEX) + y;
+    }
+    else{
+      y = String(EEPROM.read(i), HEX) + y;
+    }
+  }
+  y.toUpperCase();
+  //Serial.println(y); //Debug
+  return strtol(y.c_str(), NULL, 16);
+}
 
 
 void setup() {
