@@ -1,7 +1,6 @@
-//#include "LiquidCrystal/src/LiquidCrystal.cpp"
+#include "LiquidCrystal/src/LiquidCrystal.cpp"
 //#include "IRremote/src/IRremote.cpp"
 #include <IRremote.h>
-#include <LiquidCrystal.h>
 
 IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
