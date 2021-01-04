@@ -1,7 +1,5 @@
-#include "LiquidCrystal/src/LiquidCrystal.cpp"
-//#include "IRremote/src/IRremote.cpp"
+#include <LiquidCrystal.h>
 #include <IRremote.h>
-//#include "EEPROM/EEPROM.cpp"
 #include <EEPROM.h>
 
 
