@@ -172,7 +172,7 @@ void loop() {
     case 4: // "Settings"
       lcd.print("Settings");
       delay(2000);
-      callibrateBasicButtons();
+      //callibrateBasicButtons();
       break;
 
   }
