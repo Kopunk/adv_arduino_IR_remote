@@ -3,7 +3,6 @@
 #include <EEPROM.h>
 
 
-
 const int irPin = 3;
 IRrecv irrecv(irPin);
 decode_results results;
@@ -11,29 +10,36 @@ IRsend irsend;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 
+// menu constants
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
-const char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
+// menus available for user option naming
+char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
 
-
+// variables for handling Menu() in loop()
 char choice = -1;
 char subchoice = -1;
 
 
 int eeAddress = 0;
 
+// testing purposes
+long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
 
-void sendIR(const long signals[], const int len, const String protocol="LG"){
+
+// functions ----------
+
+void sendIR(const long signals[], const int len, const String protocol = "LG") {
   /*
-   * This function sends specified IR signals using specified protocol.
-   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
-   * The pin used to send signals is digital pin 3 - it is hard coded in the
-   * IRremote library, so I decided not to try to change it.
-   */
-  for(int x = 0; x < len; x++){
-    for(int i = 0; i < 3; i++){
-      if(protocol == "LG"){
+     This function sends specified IR signals using specified protocol.
+     Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
+     The pin used to send signals is digital pin 3 - it is hard coded in the
+     IRremote library, so I decided not to try to change it.
+  */
+  for (int x = 0; x < len; x++) {
+    for (int i = 0; i < 3; i++) {
+      if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
         Serial.println(signals[x]); //Debug
         delay(500);
@@ -43,9 +49,9 @@ void sendIR(const long signals[], const int len, const String protocol="LG"){
   }
 }
 
-long receiveSignal(){
-  while(true){
-    if(irrecv.decode(&results)){
+long receiveSignal() {
+  while (true) {
+    if (irrecv.decode(&results)) {
       Serial.println(results.value, HEX); // Debug
       irrecv.resume();
       return results.value;
@@ -53,20 +59,20 @@ long receiveSignal(){
   }
 }
 
-void saveToEEPROM(int addr, long value){
+void saveToEEPROM(int addr, long value) {
   EEPROM.put(addr, value);
   eeAddress += sizeof(long);
 }
 
-long readHexFromEEPROM(int addr, int howMuch = 4){
+long readHexFromEEPROM(int addr, int howMuch = 4) {
   String y = "";
   long x = 0;
-  for(int i = addr; i < howMuch; i++){
+  for (int i = addr; i < howMuch; i++) {
     x = EEPROM.read(i);
-    if(x <= 15){
+    if (x <= 15) {
       y = "0" + String(x, HEX) + y;
     }
-    else{
+    else {
       y = String(EEPROM.read(i), HEX) + y;
     }
   }
@@ -75,60 +81,23 @@ long readHexFromEEPROM(int addr, int howMuch = 4){
   return strtol(y.c_str(), NULL, 16);
 }
 
-
-void setup() {
-  // put your setup code here, to run once:
-  lcd.begin(16, 2);
-  Serial.begin(9600);
-}
-
-void loop() {
-  choice = Menu((sizeof(menuMain)/sizeof(menuMain[0])), menuMain);
-  
-  switch(choice) {
-    
-    case 0: // "Forward IR"
-      lcd.print("Forward IR");
-      delay(2000);
-      break;
-      
-    case 1: // "Send IR"
-    
-      subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
-      if(subchoice >= 0) {
-        lcd.print(menuSend[subchoice]);
-        delay(2000);
-      }
-      
-      break;
-      
-    case 2: // "Receive IR"
-      lcd.print("Receive IR");
-      delay(2000);
-      break;
-      
-    case 3: // "Connect PC"
-      lcd.print("Connect PC");
-      delay(2000);
-      break;
-
-    case 4: // "Settings"
-      lcd.print("Settings");
-      delay(2000);
-      break;
-
-  }
-
-}
-
 char Menu(const byte rows, const char list[][maxColumns]) {
+  /*
+     Returns index of chosen element of list[] - menu option
+     returns -1 when going back (left) was chosen.
+     Displays simple scrollable menu with
+     arrow (char 127) indicating current choice.
+     up / down - navigation
+     right / select - select option (return)
+     left - go back (return -1)
+  */
   char button;
   bool buttonReleased = true;
   bool selectedUpperRow = true;
   char currTopOption = 0;
-  
+
   while (true) {
-    
+
     lcd.clear();
     if (selectedUpperRow) {
       lcd.print(String(list[currTopOption]) + " " + char(127));
@@ -160,14 +129,14 @@ char Menu(const byte rows, const char list[][maxColumns]) {
           if (currTopOption != 0) {
             currTopOption--;
           }
-        } 
+        }
         else {
           selectedUpperRow = !selectedUpperRow;
         }
       }
       else if (button == 'd') { // DOWN
         if (!selectedUpperRow) {
-          if (currTopOption != rows-2) {
+          if (currTopOption != rows - 2) {
             currTopOption++;
           }
         }
@@ -180,7 +149,10 @@ char Menu(const byte rows, const char list[][maxColumns]) {
 }
 
 char ButtonRead(int buttonVal) {
-  //int buttonVal = analogRead(A0);
+  /*
+     Returns lowercase first character of button name
+     given buttonVal - usually analogRead(A0)
+  */
   if (buttonVal >= 950) { // nothing pressed
     return 0;
   }
@@ -198,5 +170,50 @@ char ButtonRead(int buttonVal) {
   }
   else if (buttonVal > 600) { // SELECT
     return 's';
+  }
+}
+
+
+// setup() and loop() ----------
+
+void setup() {
+  lcd.begin(16, 2);
+  Serial.begin(9600);
+}
+
+void loop() {
+  choice = Menu((sizeof(menuMain) / sizeof(menuMain[0])), menuMain);
+
+  switch (choice) {
+
+    case 0: // "Forward IR"
+      lcd.print("Forward IR");
+      delay(2000);
+      break;
+
+    case 1: // "Send IR"
+      //      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
+      //      if (subchoice >= 0) {
+      //        lcd.print(menuSend[subchoice]);
+      //        delay(2000);
+      //      }
+      sendIR(testsignals, (sizeof(testsignals) / sizeof(testsignals[0])));
+      break;
+
+    case 2: // "Receive IR"
+      lcd.print("Receive IR");
+      delay(2000);
+      break;
+
+    case 3: // "Connect PC"
+      lcd.print("Connect PC");
+      delay(2000);
+      break;
+
+    case 4: // "Settings"
+      lcd.print("Settings");
+      delay(2000);
+      break;
+
   }
 }
