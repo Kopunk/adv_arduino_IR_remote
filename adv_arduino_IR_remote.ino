@@ -4,7 +4,7 @@
 
 
 
-const int irPin = 3;
+const int irPin = 2;
 IRrecv irrecv(irPin);
 decode_results results;
 IRsend irsend;
@@ -23,17 +23,79 @@ char subchoice = -1;
 
 int eeAddress = 0;
 
+long receiveSignal(long skip = 0xFFFFFFFF) {
+  while (true) {
+    if (irrecv.decode(&results)) {
+      if (results.value == skip) {
+        irrecv.resume();
+        continue;
+      }
+      //Serial.println(results.value, HEX); // Debug
+      irrecv.resume();
+      return results.value;
+    }
+  }
+}
 
-void sendIR(const long signals[], const int len, const String protocol="LG"){
+void callibrateBasicButtons() {
+  String words[10] = {"POWER", "Przycisk 1", "Przycisk 2", "Przycisk 3", "Przycisk 4", "Przycisk 5", "Przycisk 6", "Przycisk 7", "Przycisk 8", "Przycisk 9"};
+  eeAddress = 0;
+
+  lcd.clear();
+  lcd.print("Kliknij 3 razy");
+  delay(2000);
+  lcd.clear();
+
+  for (int i = 0; i < 10; i++) {
+    long x = 0, y = 0, z = 0;
+    while (true) {
+      lcd.clear();
+
+      lcd.print(words[i]);
+
+      x = receiveSignal();
+      lcd.setCursor(0, 1);
+      lcd.print("3");
+      y = receiveSignal();
+      if (x != y) {
+        lcd.clear();
+        lcd.print("Powtorz kalibracje");
+        delay(1000);
+        continue;
+      }
+      lcd.print("2");
+      z = receiveSignal();
+      if (y != z) {
+        lcd.clear();
+        lcd.print("Powtorz kalibracje");
+        delay(1000);
+        continue;
+      }
+      lcd.clear();
+      lcd.print("Skalibrowano");
+      delay(1000);
+      lcd.clear();
+      saveToEEPROM(eeAddress, x);
+      break;
+    }
+
+  }
+  lcd.clear();
+  lcd.print("Sukces");
+  delay(2000);
+}
+
+
+void sendIR(const long signals[], const int len, const String protocol = "LG") {
   /*
-   * This function sends specified IR signals using specified protocol.
-   * Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
-   * The pin used to send signals is digital pin 3 - it is hard coded in the
-   * IRremote library, so I decided not to try to change it.
-   */
-  for(int x = 0; x < len; x++){
-    for(int i = 0; i < 3; i++){
-      if(protocol == "LG"){
+     This function sends specified IR signals using specified protocol.
+     Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
+     The pin used to send signals is digital pin 3 - it is hard coded in the
+     IRremote library, so I decided not to try to change it.
+  */
+  for (int x = 0; x < len; x++) {
+    for (int i = 0; i < 3; i++) {
+      if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
         Serial.println(signals[x]); //Debug
         delay(500);
@@ -43,17 +105,8 @@ void sendIR(const long signals[], const int len, const String protocol="LG"){
   }
 }
 
-long receiveSignal(){
-  while(true){
-    if(irrecv.decode(&results)){
-      Serial.println(results.value, HEX); // Debug
-      irrecv.resume();
-      return results.value;
-    }
-  }
-}
 
-void saveToEEPROM(int addr, long value){
+void saveToEEPROM(int addr, long value) {
   EEPROM.put(addr, value);
   eeAddress += sizeof(long);
 }
@@ -61,8 +114,11 @@ void saveToEEPROM(int addr, long value){
 long readHexFromEEPROM(int addr, int howMuch = 4){
   String y = "";
   long x = 0;
-  for(int i = addr; i < howMuch; i++){
+  for(int i = addr; i < howMuch + addr; i++){
     x = EEPROM.read(i);
+    if(x == 0){
+      continue;
+    }
     if(x <= 15){
       y = "0" + String(x, HEX) + y;
     }
@@ -80,33 +136,34 @@ void setup() {
   // put your setup code here, to run once:
   lcd.begin(16, 2);
   Serial.begin(9600);
+  irrecv.enableIRIn();
 }
 
 void loop() {
-  choice = Menu((sizeof(menuMain)/sizeof(menuMain[0])), menuMain);
-  
-  switch(choice) {
-    
+  choice = Menu((sizeof(menuMain) / sizeof(menuMain[0])), menuMain);
+
+  switch (choice) {
+
     case 0: // "Forward IR"
       lcd.print("Forward IR");
       delay(2000);
       break;
-      
+
     case 1: // "Send IR"
-    
-      subchoice = Menu((sizeof(menuSend)/sizeof(menuSend[0])), menuSend);
-      if(subchoice >= 0) {
+
+      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
+      if (subchoice >= 0) {
         lcd.print(menuSend[subchoice]);
         delay(2000);
       }
-      
+
       break;
-      
+
     case 2: // "Receive IR"
       lcd.print("Receive IR");
       delay(2000);
       break;
-      
+
     case 3: // "Connect PC"
       lcd.print("Connect PC");
       delay(2000);
@@ -115,6 +172,7 @@ void loop() {
     case 4: // "Settings"
       lcd.print("Settings");
       delay(2000);
+      callibrateBasicButtons();
       break;
 
   }
@@ -126,9 +184,9 @@ char Menu(const byte rows, const char list[][maxColumns]) {
   bool buttonReleased = true;
   bool selectedUpperRow = true;
   char currTopOption = 0;
-  
+
   while (true) {
-    
+
     lcd.clear();
     if (selectedUpperRow) {
       lcd.print(String(list[currTopOption]) + " " + char(127));
@@ -160,14 +218,14 @@ char Menu(const byte rows, const char list[][maxColumns]) {
           if (currTopOption != 0) {
             currTopOption--;
           }
-        } 
+        }
         else {
           selectedUpperRow = !selectedUpperRow;
         }
       }
       else if (button == 'd') { // DOWN
         if (!selectedUpperRow) {
-          if (currTopOption != rows-2) {
+          if (currTopOption != rows - 2) {
             currTopOption++;
           }
         }
