@@ -160,10 +160,14 @@ void calibrateButtons(const String words[], int addr, const int len) {
       Serial.println(x, HEX);
       EEPROM.put(addr, x);
       Serial.println(readHexFromEEPROM(addr), HEX);
+      //There is something wrong here, it saves the first button correctly but not next ones
+      //Has to be fixed
       break;
     }
     addr = addr + 4;
   }
+  //renew the buttons arrays after calibration
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
   lcd.clear();
   lcd.print("Succesfully");
   lcd.setCursor(0, 1);
@@ -198,6 +202,7 @@ void testBuzzer(const int buzzerPin = 15) {
 }
 
 void assignButtons(int len1, int len2) {
+  //This reads the signals values saved in EEPROM and stores in arrays for ease of access
   for (int i = 0; i < len1; i++) {
     basicButtonsSignals[i] = readHexFromEEPROM(i * 4);
   }
@@ -306,9 +311,12 @@ void receiveIR() {
     if (irrecv.decode(&results)) {
       Serial.println("signal received");
       Serial.println(results.value);
-      Serial.println(basicButtonsSignals[1]);
+      Serial.println(basicButtonsSignals[0]);
       Serial.println(readHexFromEEPROM(4));
-      if (results.value == basicButtonsSignals[1]) {
+      if (results.value == basicButtonsSignals[0]) {
+        testBuzzer(buzzerPin);
+      }
+      else if (results.value == basicButtonsSignals[1]) {
         testBuzzer(buzzerPin);
       }
       else if (results.value == basicButtonsSignals[2]) {
