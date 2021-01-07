@@ -85,7 +85,7 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
 long readHexFromEEPROM(int addr, int howMuch = 4) {
   String y = "";
   long x = 0;
-  for (int i = addr; i < howMuch; i++) {
+  for (int i = addr; i < addr + howMuch; i++) {
     x = EEPROM.read(i);
     if (x <= 15) {
       y = "0" + String(x, HEX) + y;
@@ -106,14 +106,14 @@ void calibrateButtons(const String words[], int addr, const int len) {
      and all of the signals received have to be the same to prevent misscalibration.
   */
 
-
+  //Start, shows messages on lcd
   lcd.clear();
   lcd.print("Press each");
   lcd.setCursor(0, 1);
   lcd.print("button 3 times");
   delay(2000);
   lcd.clear();
-
+  //function on array containing buttons to click
   for (int i = 0; i < len; i++) {
     long x = 0, y = 0, z = 0;
     while (true) {
@@ -122,6 +122,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
 
       x = receiveSignal(); // first signal
 
+      //this shows progress of callibration of specific button on screen
       lcd.setCursor(0, 1);
       lcd.print("3");
 
@@ -135,6 +136,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
         continue;
       }
 
+      //further progress
       lcd.print("2");
 
       z = receiveSignal(); // third signal
@@ -146,7 +148,8 @@ void calibrateButtons(const String words[], int addr, const int len) {
         delay(1000);
         continue;
       }
-      //if 3 signals are the same callibration of this button is succesful
+
+      //if all 3 signals are the same callibration of this button is succesful
       lcd.print("1");
       delay(300);
       lcd.clear();
@@ -156,12 +159,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
       delay(1000);
       lcd.clear();
       //saving the button signal to EEPROM
-      Serial.println(addr);
-      Serial.println(x, HEX);
       EEPROM.put(addr, x);
-      Serial.println(readHexFromEEPROM(addr), HEX);
-      //There is something wrong here, it saves the first button correctly but not next ones
-      //Has to be fixed
       break;
     }
     addr = addr + 4;
@@ -175,10 +173,6 @@ void calibrateButtons(const String words[], int addr, const int len) {
   delay(2000);
 }
 
-void saveToEEPROM(const int addr, const long value) {
-  EEPROM.put(addr, value);
-  eeAddress += sizeof(long);
-}
 
 
 void testBuzzer(const int buzzerPin = 15) {
@@ -202,7 +196,7 @@ void testBuzzer(const int buzzerPin = 15) {
 }
 
 void assignButtons(int len1, int len2) {
-  //This reads the signals values saved in EEPROM and stores in arrays for ease of access
+  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
   for (int i = 0; i < len1; i++) {
     basicButtonsSignals[i] = readHexFromEEPROM(i * 4);
   }
@@ -304,15 +298,15 @@ char ButtonRead(int buttonVal) {
 }
 
 void receiveIR() {
+  /*
+     This function receives signals and handles them,
+     executing specific code depending on what singal has been received.
+  */
   while (true) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return;
     }
     if (irrecv.decode(&results)) {
-      Serial.println("signal received");
-      Serial.println(results.value);
-      Serial.println(basicButtonsSignals[0]);
-      Serial.println(readHexFromEEPROM(4));
       if (results.value == basicButtonsSignals[0]) {
         testBuzzer(buzzerPin);
       }
