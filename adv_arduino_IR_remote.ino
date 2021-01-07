@@ -1,12 +1,16 @@
 #include <LiquidCrystal.h>
 #include <IRremote.h>
 #include <EEPROM.h>
+#include <NewTone.h>
+//NewTone is needed because of Tone() and IRremote using the same timer
+//which is causing conflicts.
 
-
-const int irPin = 3;
+//IRremote initializations and variables.
+const int irPin = 2;
 IRrecv irrecv(irPin);
 decode_results results;
 IRsend irsend;
+//LCD initialization
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 
@@ -21,12 +25,23 @@ char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank
 char choice = -1;
 char subchoice = -1;
 
-
+//variable for EEPROM addressing
 int eeAddress = 0;
+
+//constant for buzzer pin
+//pin 15 is A1
+const int buzzerPin = 15;
 
 // testing purposes
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
 
+//arrays with buttons
+const String basicButtons[10] = {"POWER", "Przycisk 1", "Przycisk 2", "Przycisk 3", "Przycisk 4", "Przycisk 5", "Przycisk 6", "Przycisk 7", "Przycisk 8", "Przycisk 9"};
+const String additionalButtons[5] = {"RIGHT", "UP", "DOWN", "LEFT", "OK"};
+
+//arrays with buttons signals
+long basicButtonsSignals[10];
+long additionalButtonsSignals[5];
 
 // functions ----------
 
@@ -49,25 +64,28 @@ void sendIR(const long signals[], const int len, const String protocol = "LG") {
   }
 }
 
-long receiveSignal() {
+long receiveSignal(const long skip = 0xFFFFFFFF) {
+  /*
+     Awaits a signal and returns it. You can also specify
+     a 'skip' signal which the function will ignore and wait for next one.
+  */
   while (true) {
     if (irrecv.decode(&results)) {
-      Serial.println(results.value, HEX); // Debug
+      if (results.value == skip) {
+        irrecv.resume();
+        continue;
+      }
+      //Serial.println(results.value, HEX); // Debug
       irrecv.resume();
       return results.value;
     }
   }
 }
 
-void saveToEEPROM(int addr, long value) {
-  EEPROM.put(addr, value);
-  eeAddress += sizeof(long);
-}
-
 long readHexFromEEPROM(int addr, int howMuch = 4) {
   String y = "";
   long x = 0;
-  for (int i = addr; i < howMuch; i++) {
+  for (int i = addr; i < addr + howMuch; i++) {
     x = EEPROM.read(i);
     if (x <= 15) {
       y = "0" + String(x, HEX) + y;
@@ -79,6 +97,112 @@ long readHexFromEEPROM(int addr, int howMuch = 4) {
   y.toUpperCase();
   //Serial.println(y); //Debug
   return strtol(y.c_str(), NULL, 16);
+}
+
+void calibrateButtons(const String words[], int addr, const int len) {
+  /*
+     Used to calibrate basic remote buttons listed in words[].
+     For it to work properly you have to click each button 3 times
+     and all of the signals received have to be the same to prevent misscalibration.
+  */
+
+  //Start, shows messages on lcd
+  lcd.clear();
+  lcd.print("Press each");
+  lcd.setCursor(0, 1);
+  lcd.print("button 3 times");
+  delay(2000);
+  lcd.clear();
+  //function on array containing buttons to click
+  for (int i = 0; i < len; i++) {
+    long x = 0, y = 0, z = 0;
+    while (true) {
+      lcd.clear();
+      lcd.print(words[i]);
+
+      x = receiveSignal(); // first signal
+
+      //this shows progress of callibration of specific button on screen
+      lcd.setCursor(0, 1);
+      lcd.print("3");
+
+      y = receiveSignal(); // second signal
+      if (x != y) { // checking if first and second are the same
+        lcd.clear();
+        lcd.print("ERROR!");
+        lcd.setCursor(0, 1);
+        lcd.print("Try once again");
+        delay(1000);
+        continue;
+      }
+
+      //further progress
+      lcd.print("2");
+
+      z = receiveSignal(); // third signal
+      if (y != z) { // checking if second and third are the same
+        lcd.clear();
+        lcd.print("ERROR!");
+        lcd.setCursor(0, 1);
+        lcd.print("Try once again");
+        delay(1000);
+        continue;
+      }
+
+      //if all 3 signals are the same callibration of this button is succesful
+      lcd.print("1");
+      delay(300);
+      lcd.clear();
+      lcd.print("Button");
+      lcd.setCursor(0, 1);
+      lcd.print("calibrated");
+      delay(1000);
+      lcd.clear();
+      //saving the button signal to EEPROM
+      EEPROM.put(addr, x);
+      break;
+    }
+    addr = addr + 4;
+  }
+  //renew the buttons arrays after calibration
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  lcd.clear();
+  lcd.print("Succesfully");
+  lcd.setCursor(0, 1);
+  lcd.print("callibrated");
+  delay(2000);
+}
+
+
+
+void testBuzzer(const int buzzerPin = 15) {
+  //testing buzzer using melody from toneMelody Arduino example sketch by Tom Igoe
+  int melody[] = { 262, 196, 196, 220, 196, 0, 247, 262 };
+  int noteDurations[] = { 4, 8, 8, 4, 4, 4, 4, 4 };
+  for (int thisNote = 0; thisNote < 8; thisNote++) {
+
+    // to calculate the note duration, take one second divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000 / noteDurations[thisNote];
+    NewTone(buzzerPin, melody[thisNote], noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noNewTone(buzzerPin);
+  }
+}
+
+void assignButtons(int len1, int len2) {
+  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
+  for (int i = 0; i < len1; i++) {
+    basicButtonsSignals[i] = readHexFromEEPROM(i * 4);
+  }
+  for (int i = len1; i < len2; i++) {
+    additionalButtonsSignals[i] = readHexFromEEPROM(i * 4);
+  }
 }
 
 char Menu(const byte rows, const char list[][maxColumns]) {
@@ -173,12 +297,41 @@ char ButtonRead(int buttonVal) {
   }
 }
 
+void receiveIR() {
+  /*
+     This function receives signals and handles them,
+     executing specific code depending on what singal has been received.
+  */
+  while (true) {
+    if (ButtonRead(analogRead(A0)) == 'l') {
+      return;
+    }
+    if (irrecv.decode(&results)) {
+      if (results.value == basicButtonsSignals[0]) {
+        testBuzzer(buzzerPin);
+      }
+      else if (results.value == basicButtonsSignals[1]) {
+        testBuzzer(buzzerPin);
+      }
+      else if (results.value == basicButtonsSignals[2]) {
+        lcd.clear();
+        lcd.print("NAPIS");
+        delay(2000);
+        lcd.clear();
+        lcd.print("Receive IR");
+      }
+      irrecv.resume();
+    }
+  }
+}
 
 // setup() and loop() ----------
 
 void setup() {
   lcd.begin(16, 2);
   Serial.begin(9600);
+  irrecv.enableIRIn();
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
 }
 
 void loop() {
@@ -202,7 +355,8 @@ void loop() {
 
     case 2: // "Receive IR"
       lcd.print("Receive IR");
-      delay(2000);
+      receiveIR();
+      //delay(2000);
       break;
 
     case 3: // "Connect PC"
@@ -213,6 +367,9 @@ void loop() {
     case 4: // "Settings"
       lcd.print("Settings");
       delay(2000);
+      calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+      //calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+      //testBuzzer(buzzerPin);
       break;
 
   }
