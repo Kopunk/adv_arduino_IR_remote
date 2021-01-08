@@ -35,13 +35,16 @@ const int buzzerPin = 15;
 // testing purposes
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
 
-//arrays with buttons
+//arrays for buttons
 const String basicButtons[10] = {"POWER", "Przycisk 1", "Przycisk 2", "Przycisk 3", "Przycisk 4", "Przycisk 5", "Przycisk 6", "Przycisk 7", "Przycisk 8", "Przycisk 9"};
 const String additionalButtons[5] = {"RIGHT", "UP", "DOWN", "LEFT", "OK"};
 
-//arrays with buttons signals
+//arrays for buttons signals
 long basicButtonsSignals[10];
 long additionalButtonsSignals[5];
+
+//array for signal sequences
+byte sequences[8][4] = {{0, 1, 2}};
 
 // functions ----------
 
@@ -205,6 +208,10 @@ void assignButtons(int len1, int len2) {
   }
 }
 
+void assignSequences(int len){
+  //Reads the sequences stored in EEPROM and saves in arrays for ease of use
+}
+
 char Menu(const byte rows, const char list[][maxColumns]) {
   /*
      Returns index of chosen element of list[] - menu option
@@ -322,6 +329,13 @@ void receiveIR() {
       }
       irrecv.resume();
     }
+  }
+}
+
+void forwardIR(){
+  while(true){
+    long x = receiveSignal();
+    switch(x);
   }
 }
 
