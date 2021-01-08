@@ -46,15 +46,10 @@ jak to działa...
 jak to działa...
 
 ## Adresy pamięci EEPROM dla poszczególnych elementów
-connectPCAddr = 0
-
-basicButtonsAddr = 1;
-
-additionalButtonsAddr = 41;
-
-banksNamesAddr = 61;
-
-banksAddr = 173;
-
-otherSignals = 213;
+connectPCAddr = 0<br>
+basicButtonsAddr = 1<br>
+additionalButtonsAddr = 41<br>
+banksNamesAddr = 61<br>
+banksAddr = 173<br>
+otherSignals = 213<br>
 
