@@ -1,9 +1,12 @@
 #include <LiquidCrystal.h>
 #include <IRremote.h>
 #include <EEPROM.h>
-#include <NewTone.h>
-//NewTone is needed because of Tone() and IRremote using the same timer
-//which is causing conflicts.
+#include "Buzz.h"
+
+// Buzz includes buzz() function:
+// takes char argument 0 - 4 or other for default
+// see Buzz.h for sound descriptions.
+
 
 //IRremote initializations and variables.
 const int irPin = 2;
@@ -28,9 +31,9 @@ char subchoice = -1;
 //variable for EEPROM addressing
 int eeAddress = 0;
 
-//constant for buzzer pin
+//constant for buzz pin
 //pin 15 is A1
-const int buzzerPin = 15;
+// default buzzPin in Buzz.h is 15
 
 // testing purposes
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
@@ -173,28 +176,6 @@ void calibrateButtons(const String words[], int addr, const int len) {
   delay(2000);
 }
 
-
-
-void testBuzzer(const int buzzerPin = 15) {
-  //testing buzzer using melody from toneMelody Arduino example sketch by Tom Igoe
-  int melody[] = { 262, 196, 196, 220, 196, 0, 247, 262 };
-  int noteDurations[] = { 4, 8, 8, 4, 4, 4, 4, 4 };
-  for (int thisNote = 0; thisNote < 8; thisNote++) {
-
-    // to calculate the note duration, take one second divided by the note type.
-    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-    int noteDuration = 1000 / noteDurations[thisNote];
-    NewTone(buzzerPin, melody[thisNote], noteDuration);
-
-    // to distinguish the notes, set a minimum time between them.
-    // the note's duration + 30% seems to work well:
-    int pauseBetweenNotes = noteDuration * 1.30;
-    delay(pauseBetweenNotes);
-    // stop the tone playing:
-    noNewTone(buzzerPin);
-  }
-}
-
 void assignButtons(int len1, int len2) {
   //Reads the signal values stored in EEPROM and saves in arrays for ease of use
   for (int i = 0; i < len1; i++) {
@@ -308,10 +289,10 @@ void receiveIR() {
     }
     if (irrecv.decode(&results)) {
       if (results.value == basicButtonsSignals[0]) {
-        testBuzzer(buzzerPin);
+        buzz(3);
       }
       else if (results.value == basicButtonsSignals[1]) {
-        testBuzzer(buzzerPin);
+        buzz(3);
       }
       else if (results.value == basicButtonsSignals[2]) {
         lcd.clear();
@@ -328,6 +309,9 @@ void receiveIR() {
 // setup() and loop() ----------
 
 void setup() {
+  pinMode(buzzPin, OUTPUT);  // buzzPin defined in Buzz.h
+  buzz(1);
+
   lcd.begin(16, 2);
   Serial.begin(9600);
   irrecv.enableIRIn();
@@ -369,7 +353,7 @@ void loop() {
       delay(2000);
       calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
       //calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
-      //testBuzzer(buzzerPin);
+      //buzz();
       break;
 
   }
