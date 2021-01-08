@@ -44,3 +44,11 @@ jak to działa...
 
 ## Łączność z Komputerem
 jak to działa...
+
+## Adresy pamięci EEPROM dla poszczególnych elementów
+connectPCAddr = 0
+basicButtonsAddr = 1;
+additionalButtonsAddr = 41;
+banksNamesAddr = 61;
+banksAddr = 173;
+otherSignals = 213;
