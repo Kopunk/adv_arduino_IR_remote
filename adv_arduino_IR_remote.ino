@@ -31,9 +31,9 @@ char subchoice = -1;
 //variable for EEPROM addressing
 int eeAddress = 0;
 
-//constant for buzzer pin
+//constant for buzz pin
 //pin 15 is A1
-const int buzzerPin = 15;
+// default buzzPin in Buzz.h is 15
 
 // testing purposes
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
@@ -289,10 +289,10 @@ void receiveIR() {
     }
     if (irrecv.decode(&results)) {
       if (results.value == basicButtonsSignals[0]) {
-        testBuzzer(buzzerPin);
+        buzz(3);
       }
       else if (results.value == basicButtonsSignals[1]) {
-        testBuzzer(buzzerPin);
+        buzz(3);
       }
       else if (results.value == basicButtonsSignals[2]) {
         lcd.clear();
@@ -353,7 +353,7 @@ void loop() {
       delay(2000);
       calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
       //calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
-      //testBuzzer(buzzerPin);
+      //buzz();
       break;
 
   }
