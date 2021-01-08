@@ -53,3 +53,7 @@ banksNamesAddr = 61<br>
 banksAddr = 173<br>
 otherSignals = 213<br>
 
+## Banki pamięci:
+Bank 1 = [POWER, Przycisk1, Przycisk2]
+Bank 2 = [Przycisk2, Przycisk1, POWER]
+
