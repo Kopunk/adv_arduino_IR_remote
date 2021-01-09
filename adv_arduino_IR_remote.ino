@@ -340,15 +340,9 @@ void receiveIR() {
   }
 }
 
-int arrToInt(const char arr[], const int len) {
-  int iarr[len] = {};
-  for (int i = 0; i < len; i++) {
-    iarr[i] = arr[i] - '0';
-  }
-  return iarr;
-}
 
 void forwardIR() {
+  //sends sequences of signals depending on received signal
   while (true) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return;
@@ -366,6 +360,7 @@ void forwardIR() {
 }
 
 void loadSequences(const int len1, const int len2, int addr = 173) {
+  //load sequences from EEPROM
   for (int i = 0; i < len1; i++) {
     for (int j = 0; j < len2; j++) {
       int x = EEPROM.read(addr);
