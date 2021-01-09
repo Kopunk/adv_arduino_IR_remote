@@ -3,7 +3,7 @@ A university project developed by Aleksander Kopeć and Wojciech Kopański. <br>
 The following documentation is written in polish as it will be taken under grading.
 
 # Założenia Projektu
-Projekt ma za zadanie umożliwić rozbudowaną komunikacje pilot<->arduino<->odbiornik. Użytkownik porzusza się po menu w którym wybiera poszczególne funkcje urządzenia:
+Projekt ma za zadanie umożliwić rozbudowaną komunikacje pilot<->arduino<->odbiornik. Użytkownik porusza się po menu w którym wybiera poszczególne funkcje urządzenia:
 - Forward IR -> Wysyłanie sygnałów w odpowiedzi na odebrany sygnał.
 - Send IR    -> Wysyłanie sygnałów bezpośrednio z arduino
 - Receive IR -> Wykonuje różne akcje na arduino zależnie od otrzymanego sygnału.
