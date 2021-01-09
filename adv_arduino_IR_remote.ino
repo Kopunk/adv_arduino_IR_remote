@@ -47,7 +47,7 @@ const int otherSignals = 213;
 long testsignals[3] = {0x20DF40BF, 0x20DFC03F, 0x20DFD02F}; // volume up, volume down, source (may vary on device)
 
 //arrays for buttons
-const String basicButtons[10] = {"POWER", "Przycisk 1", "Przycisk 2", "Przycisk 3", "Przycisk 4", "Przycisk 5", "Przycisk 6", "Przycisk 7", "Przycisk 8", "Przycisk 9"};
+const String basicButtons[10] = {"POWER", "VOLUME UP", "VOLUME DOWN", "Przycisk 1", "Przycisk 2", "Przycisk 3", "Przycisk 4", "Przycisk 5", "Przycisk 6", "Przycisk 7"};
 const String additionalButtons[5] = {"RIGHT", "UP", "DOWN", "LEFT", "OK"};
 
 //arrays for buttons signals
@@ -331,7 +331,71 @@ void forwardIR() {
     long x = receiveSignal();
     int len = sizeof(sequences[0]) / sizeof(sequences[0][1]);
     long tempSignals[len];
+    
     if (x == basicButtonsSignals[1]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[2]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[3]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[3]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[4]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[5]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[6]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+
+    else if (x == basicButtonsSignals[7]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+    
+    else if (x == basicButtonsSignals[8]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+    
+    else if (x == basicButtonsSignals[9]) {
       for (int i = 0; i < len; i++) {
         tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
       }
