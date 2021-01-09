@@ -28,6 +28,14 @@ char subchoice = -1;
 //variable for EEPROM addressing
 int eeAddress = 0;
 
+//constants for EEPROM addressing
+const int connectPCAddr = 0;
+const int basicButtonsAddr = 1;
+const int additionalButtonsAddr = 41;
+const int banksNamesAddr = 61;
+const int banksAddr = 173;
+const int otherSignals = 213;
+
 //constant for buzzer pin
 //pin 15 is A1
 const int buzzerPin = 15;
@@ -44,26 +52,26 @@ long basicButtonsSignals[10];
 long additionalButtonsSignals[5];
 
 //array for signal sequences
-byte sequences[8][4] = {{0, 1, 2}};
+char sequences[10][4];
+int intSequences[10][4];
 
 // functions ----------
 
 void sendIR(const long signals[], const int len, const String protocol = "LG") {
   /*
      This function sends specified IR signals using specified protocol.
-     Right now it sends signals in bursts of 3 and delay of 2s, which is subject to change.
+     Right now it sends signals in intervals of 1 second.
      The pin used to send signals is digital pin 3 - it is hard coded in the
      IRremote library, so I decided not to try to change it.
   */
   for (int x = 0; x < len; x++) {
-    for (int i = 0; i < 3; i++) {
+    if (signals[x] != 0) {
       if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
-        Serial.println(signals[x]); //Debug
-        delay(500);
+        //Serial.println(signals[x]); //Debug
       }
     }
-    delay(2000);
+    delay(1000);
   }
 }
 
@@ -208,7 +216,7 @@ void assignButtons(int len1, int len2) {
   }
 }
 
-void assignSequences(int len){
+void assignSequences(int len) {
   //Reads the sequences stored in EEPROM and saves in arrays for ease of use
 }
 
@@ -332,10 +340,39 @@ void receiveIR() {
   }
 }
 
-void forwardIR(){
-  while(true){
+int arrToInt(const char arr[], const int len) {
+  int iarr[len] = {};
+  for (int i = 0; i < len; i++) {
+    iarr[i] = arr[i] - '0';
+  }
+  return iarr;
+}
+
+void forwardIR() {
+  while (true) {
+    if (ButtonRead(analogRead(A0)) == 'l') {
+      return;
+    }
     long x = receiveSignal();
-    switch(x);
+    int len = sizeof(sequences[0]) / sizeof(sequences[0][1]);
+    long tempSignals[len];
+    if (x == basicButtonsSignals[1]) {
+      for (int i = 0; i < len; i++) {
+        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
+      }
+      sendIR(tempSignals, len);
+    }
+  }
+}
+
+void loadSequences(const int len1, const int len2, int addr = 173) {
+  for (int i = 0; i < len1; i++) {
+    for (int j = 0; j < len2; j++) {
+      int x = EEPROM.read(addr);
+      sequences[i][j] = x;
+      intSequences[i][j] = x - '0';
+      addr++;
+    }
   }
 }
 
@@ -346,6 +383,7 @@ void setup() {
   Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
 }
 
 void loop() {
