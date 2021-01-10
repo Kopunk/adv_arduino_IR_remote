@@ -21,8 +21,9 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 const byte maxColumns = 14;
 const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Option 4", "-Option 5"}; //testing
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
+const char menuSettings[][maxColumns] = {"Cal. basic", "Cal. addit.", "Test Buzzer"};
 // menus available for user option naming
-char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5"};
+char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
 
 // variables for handling Menu() in loop()
 char choice = -1;
@@ -55,8 +56,7 @@ long basicButtonsSignals[10];
 long additionalButtonsSignals[5];
 
 //array for signal sequences
-char sequences[10][4];
-int intSequences[10][4];
+long sequences[10][4];
 
 // functions ----------
 
@@ -71,10 +71,10 @@ void sendIR(const long signals[], const int len, const String protocol = "LG") {
     if (signals[x] != 0) {
       if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
-        //Serial.println(signals[x]); //Debug
+        Serial.println(signals[x]); //Debug
       }
+      delay(1000);
     }
-    delay(1000);
   }
 }
 
@@ -84,6 +84,10 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
      a 'skip' signal which the function will ignore and wait for next one.
   */
   while (true) {
+    if (ButtonRead(analogRead(A0)) == 'l') {
+      return 123;
+    }
+    
     if (irrecv.decode(&results)) {
       if (results.value == skip) {
         irrecv.resume();
@@ -180,6 +184,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
   }
   //renew the buttons arrays after calibration
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   lcd.clear();
   lcd.print("Succesfully");
   lcd.setCursor(0, 1);
@@ -197,9 +202,6 @@ void assignButtons(int len1, int len2) {
   }
 }
 
-void assignSequences(int len) {
-  //Reads the sequences stored in EEPROM and saves in arrays for ease of use
-}
 
 char Menu(const byte rows, const char list[][maxColumns]) {
   /*
@@ -328,92 +330,64 @@ void forwardIR() {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return;
     }
+
     long x = receiveSignal();
-    int len = sizeof(sequences[0]) / sizeof(sequences[0][1]);
-    long tempSignals[len];
     
+    if (x == 123){
+      return;
+    }
+    
+    if (x == basicButtonsSignals[0]) {
+      sendIR(sequences[0], sizeof(sequences[0]) / sizeof(sequences[0][0]));
+    }
     if (x == basicButtonsSignals[1]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+      sendIR(sequences[1], sizeof(sequences[1]) / sizeof(sequences[1][0]));
     }
-
-    else if (x == basicButtonsSignals[2]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[2]) {
+      sendIR(sequences[2], sizeof(sequences[2]) / sizeof(sequences[2][0]));
     }
-
-    else if (x == basicButtonsSignals[3]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[3]) {
+      sendIR(sequences[4], sizeof(sequences[3]) / sizeof(sequences[3][0]));
     }
-
-    else if (x == basicButtonsSignals[3]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[4]) {
+      sendIR(sequences[5], sizeof(sequences[4]) / sizeof(sequences[4][0]));
     }
-
-    else if (x == basicButtonsSignals[4]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[5]) {
+      sendIR(sequences[3], sizeof(sequences[5]) / sizeof(sequences[5][0]));
     }
-
-    else if (x == basicButtonsSignals[5]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[6]) {
+      sendIR(sequences[6], sizeof(sequences[6]) / sizeof(sequences[6][0]));
     }
-
-    else if (x == basicButtonsSignals[6]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[7]) {
+      sendIR(sequences[7], sizeof(sequences[7]) / sizeof(sequences[7][0]));
     }
-
-    else if (x == basicButtonsSignals[7]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[8]) {
+      sendIR(sequences[8], sizeof(sequences[8]) / sizeof(sequences[8][0]));
     }
-    
-    else if (x == basicButtonsSignals[8]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
-    }
-    
-    else if (x == basicButtonsSignals[9]) {
-      for (int i = 0; i < len; i++) {
-        tempSignals[i] = additionalButtonsSignals[intSequences[0][i]];
-      }
-      sendIR(tempSignals, len);
+    if (x == basicButtonsSignals[9]) {
+      sendIR(sequences[9], sizeof(sequences[9]) / sizeof(sequences[9][0]));
     }
   }
 }
 
-void loadSequences(const int len1, const int len2, int addr = 173) {
+void loadSequences(const int len1, const int len2, int addr) {
   //load sequences from EEPROM
   for (int i = 0; i < len1; i++) {
     for (int j = 0; j < len2; j++) {
-      int x = EEPROM.read(addr);
-      sequences[i][j] = x;
-      intSequences[i][j] = x - '0';
+      int x = EEPROM.read(addr) - '0';
+      if (x == 207) {
+        sequences[i][j] = 0;
+      }
+      else if (i >= len1 - 2) {
+        sequences[i][j] = additionalButtonsSignals[x];
+      }
+      else {
+        sequences[i][j] = basicButtonsSignals[x];
+      }
       addr++;
     }
   }
+
 }
 
 // setup() and loop() ----------
@@ -427,6 +401,9 @@ void setup() {
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
+  for(int i = 0; i < 9; i++){
+    Serial.println(basicButtonsSignals[i], HEX);
+  }
 }
 
 void loop() {
@@ -436,16 +413,17 @@ void loop() {
 
     case 0: // "Forward IR"
       lcd.print("Forward IR");
-      delay(2000);
+      forwardIR();
       break;
 
     case 1: // "Send IR"
-      //      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
-      //      if (subchoice >= 0) {
-      //        lcd.print(menuSend[subchoice]);
-      //        delay(2000);
-      //      }
-      sendIR(testsignals, (sizeof(testsignals) / sizeof(testsignals[0])));
+      subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
+      if (ButtonRead(analogRead(A0)) == 'l') {
+        break;
+      }
+      else{
+        sendIR(sequences[subchoice], sizeof(sequences[subchoice]) / sizeof(sequences[subchoice][0]));
+      }
       break;
 
     case 2: // "Receive IR"
@@ -460,11 +438,24 @@ void loop() {
       break;
 
     case 4: // "Settings"
-      lcd.print("Settings");
-      delay(2000);
-      calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
-      //calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
-      //buzz();
+      subchoice = Menu((sizeof(menuSettings) / sizeof(menuSettings[0])), menuSettings);
+      if (ButtonRead(analogRead(A0)) == 'l') {
+        break;
+      }
+      switch(subchoice){
+
+        case 0:
+        calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+        break;
+
+        case 1:
+        calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+        break;
+
+        case 2:
+        buzz();
+        break;
+      }
       break;
 
   }
