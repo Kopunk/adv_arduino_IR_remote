@@ -6,10 +6,10 @@ import serial.tools.list_ports  # for listing comports
 
 comports = [comport.device for comport in serial.tools.list_ports.comports()]
 
-BANK_NO = 8  # number of banks
+BANK_NO = 10  # number of banks
 BANK_NAME_LEN = 14  # number of characters in each bank name
 banknames = []  # bank names to be displayed
-read_banknames = []  # bank names read from arduino
+read_banknames = ["" for i in range(BANK_NO)]  # bank names read from arduino
 
 # port choice window -----------------------------------------------------------
 # port choice_port functions
@@ -43,7 +43,7 @@ with serial.Serial(port="COM5", baudrate=9600, timeout=3) as ser:
     else:
         while ser.in_waiting:
             line = ser.readline()
-            line = line.decode()[:-2]  # delete \n\r
+            line = line.decode("ascii")[:-2]  # delete \n\r
             read_banknames.append(line)
 
 

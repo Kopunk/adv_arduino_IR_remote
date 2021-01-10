@@ -2,6 +2,7 @@
 #include <IRremote.h>
 #include <EEPROM.h>
 #include "Buzz.h"
+#include "PCMode.h"
 
 // Buzz includes buzz() function:
 // takes char argument 0 - 4 or other for default
@@ -23,7 +24,7 @@ const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Optio
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
 const char menuSettings[][maxColumns] = {"Cal. basic", "Cal. addit.", "Test Buzzer"};
 // menus available for user option naming
-char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
+char menuSend[bankNo][maxColumns]; // = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
 
 // variables for handling Menu() in loop()
 char choice = -1;
@@ -37,8 +38,17 @@ const int connectPCAddr = 0;
 const int basicButtonsAddr = 1;
 const int additionalButtonsAddr = 41;
 const int banksNamesAddr = 61;
-const int banksAddr = 173;
-const int otherSignals = 213;
+const int banksAddr = 201;
+const int otherSignals = 241;
+
+/* as replacement for above
+  const int connectPCAddr = 0;
+  const int basicButtonsAddr = 1;
+  const int additionalButtonsAddr = basicButtonsAddr + (4 * 10); // (4 * bankNo)
+  const int banksNamesAddr = additionalButtonsAddr + (4 * 5);
+  const int banksAddr = banksNamesAddr + (14 * 10);  // (bankNameLen * bankNo))
+  const int otherSignals = banksAddr + (4 * 10);
+*/
 
 //constant for buzz pin
 //pin 15 is A1
@@ -87,7 +97,7 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return 123;
     }
-    
+
     if (irrecv.decode(&results)) {
       if (results.value == skip) {
         irrecv.resume();
@@ -332,11 +342,11 @@ void forwardIR() {
     }
 
     long x = receiveSignal();
-    
-    if (x == 123){
+
+    if (x == 123) {
       return;
     }
-    
+
     if (x == basicButtonsSignals[0]) {
       sendIR(sequences[0], sizeof(sequences[0]) / sizeof(sequences[0][0]));
     }
@@ -390,6 +400,9 @@ void loadSequences(const int len1, const int len2, int addr) {
 
 }
 
+// reset program function
+void (*resetFunc) (void) = 0; //declare reset function at address 0
+
 // setup() and loop() ----------
 
 void setup() {
@@ -397,11 +410,26 @@ void setup() {
   buzz(1);
 
   lcd.begin(16, 2);
+
+  byte connPC = EEPROM.read(0);
+  // load defaults to EEPROM
+  if (connPC == 255)  {
+    lcd.print("LOADING DEFAULTS");
+    writeDefaultBanknames();
+    connPC = 0;
+  }
+  // enable pc communication
+  if (connPC == 1) {
+    lcd.print("PC CONN MODE");
+    pcMode();
+    EEPROM.update(connectPCAddr, 0);
+  }
+
   Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
-  for(int i = 0; i < 9; i++){
+  for (int i = 0; i < 9; i++) {
     Serial.println(basicButtonsSignals[i], HEX);
   }
 }
@@ -421,7 +449,7 @@ void loop() {
       if (ButtonRead(analogRead(A0)) == 'l') {
         break;
       }
-      else{
+      else {
         sendIR(sequences[subchoice], sizeof(sequences[subchoice]) / sizeof(sequences[subchoice][0]));
       }
       break;
@@ -434,7 +462,9 @@ void loop() {
 
     case 3: // "Connect PC"
       lcd.print("Connect PC");
+      EEPROM.update(connectPCAddr, 1);
       delay(2000);
+      resetFunc();  // start program from 0
       break;
 
     case 4: // "Settings"
@@ -442,19 +472,19 @@ void loop() {
       if (ButtonRead(analogRead(A0)) == 'l') {
         break;
       }
-      switch(subchoice){
+      switch (subchoice) {
 
         case 0:
-        calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
-        break;
+          calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+          break;
 
         case 1:
-        calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
-        break;
+          calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+          break;
 
         case 2:
-        buzz();
-        break;
+          buzz();
+          break;
       }
       break;
 
