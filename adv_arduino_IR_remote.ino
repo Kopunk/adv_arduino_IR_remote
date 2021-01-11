@@ -35,10 +35,10 @@ int eeAddress = 0;
 //constants for EEPROM addressing
 const int connectPCAddr = 0;
 const int basicButtonsAddr = 1;
-const int additionalButtonsAddr = 41;
-const int banksNamesAddr = 61;
-const int banksAddr = 173;
-const int otherSignals = 213;
+const int additionalButtonsAddr = basicButtonsAddr + (4 * 10); // (4 * bankNo)
+const int banksNamesAddr = additionalButtonsAddr + (4 * 5);
+const int banksAddr = banksNamesAddr + (14 * 10);  // (bankNameLen * bankNo))
+const int otherSignals = banksAddr + (4 * 10);
 
 //constant for buzz pin
 //pin 15 is A1
@@ -117,6 +117,18 @@ long readHexFromEEPROM(int addr, int howMuch = 4) {
   return strtol(y.c_str(), NULL, 16);
 }
 
+void assignButtons(int len1, int len2, int addr1, int addr2) {
+  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
+  for (int i = 0; i < len1; i++) {
+    basicButtonsSignals[i] = readHexFromEEPROM(addr1);
+    addr1 = addr1 + 4;
+  }
+  for (int i = 0; i < len2; i++) {
+    additionalButtonsSignals[i] = readHexFromEEPROM(addr2);
+    addr2 = addr2 + 4;
+  }
+}
+
 void calibrateButtons(const String words[], int addr, const int len) {
   /*
      Used to calibrate basic remote buttons listed in words[].
@@ -183,7 +195,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
     addr = addr + 4;
   }
   //renew the buttons arrays after calibration
-  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   lcd.clear();
   lcd.print("Succesfully");
@@ -191,17 +203,6 @@ void calibrateButtons(const String words[], int addr, const int len) {
   lcd.print("callibrated");
   delay(2000);
 }
-
-void assignButtons(int len1, int len2) {
-  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
-  for (int i = 0; i < len1; i++) {
-    basicButtonsSignals[i] = readHexFromEEPROM(i * 4);
-  }
-  for (int i = len1; i < len2; i++) {
-    additionalButtonsSignals[i] = readHexFromEEPROM(i * 4);
-  }
-}
-
 
 char Menu(const byte rows, const char list[][maxColumns]) {
   /*
@@ -373,7 +374,7 @@ void setup() {
   lcd.begin(16, 2);
   Serial.begin(9600);
   irrecv.enableIRIn();
-  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   for (int i = 0; i < 9; i++) {
     Serial.println(basicButtonsSignals[i], HEX);
@@ -392,7 +393,7 @@ void loop() {
 
     case 1: // "Send IR"
       subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
-      if (ButtonRead(analogRead(A0)) == 'l') {
+      if (subchoice == -1) {
         break;
       }
       else {
@@ -419,11 +420,11 @@ void loop() {
       switch (subchoice) {
 
         case 0:
-          calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+          calibrateButtons(basicButtons, basicButtonsAddr, sizeof(basicButtons) / sizeof(basicButtons[0]));
           break;
 
         case 1:
-          calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+          calibrateButtons(additionalButtons, additionalButtonsAddr, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
           break;
 
         case 2:
