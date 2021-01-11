@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 #include "Buzz.h"
 #include "PCMode.h"
+#include "WriteDefaults.h"
 
 // Buzz includes buzz() function:
 // takes char argument 0 - 4 or other for default
@@ -118,7 +119,6 @@ long readHexFromEEPROM(int addr, int howMuch = 4) {
   return strtol(y.c_str(), NULL, 16);
 }
 
-
 void assignButtons(int len1, int len2, int addr1, int addr2) {
   //Reads the signal values stored in EEPROM and saves in arrays for ease of use
   for (int i = 0; i < len1; i++) {
@@ -197,7 +197,7 @@ void calibrateButtons(const String words[], int addr, const int len) {
     addr = addr + 4;
   }
   //renew the buttons arrays after calibration
-  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   lcd.clear();
   lcd.print("Succesfully");
@@ -366,6 +366,13 @@ void loadSequences(const int len1, const int len2, int addr) {
   }
 }
 
+void loadBankNames() {
+  buzz(4);
+  const char bankNameLen = 14;
+  for (int i = banksNamesAddr; i < banksAddr; i++) {
+    menuSend[(i - banksNamesAddr) / bankNameLen][(i - banksNamesAddr) % bankNameLen] = EEPROM.read(i);
+  }
+}
 
 // reset program function
 void (*resetFunc) (void) = 0; //declare reset function at address 0
@@ -382,19 +389,23 @@ void setup() {
   // load defaults to EEPROM
   if (connPC == 255)  {
     lcd.print("LOADING DEFAULTS");
-    writeDefaultBanknames();
-    connPC = 0;
+    writeDefaultBanknames(banksNamesAddr, banksAddr);
+    writeDefaultBanks(banksAddr);
+    EEPROM.update(0, 0);
   }
-  // enable pc communication
-  if (connPC == 1) {
-    lcd.print("PC CONN MODE");
-    pcMode();
-    EEPROM.update(connectPCAddr, 0);
-  }
+  // // enable pc communication
+  // if (connPC == 1) {
+  //   lcd.print("PC CONN MODE");
+  //   pcMode();
+  //   EEPROM.update(connectPCAddr, 0);
+  // }
+
+  // load data from EEPROM
+  loadBankNames();
 
   Serial.begin(9600);
   irrecv.enableIRIn();
-  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
+  assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   for (int i = 0; i < 9; i++) {
     Serial.println(basicButtonsSignals[i], HEX);
@@ -413,7 +424,7 @@ void loop() {
 
     case 1: // "Send IR"
       subchoice = Menu((sizeof(menuSend) / sizeof(menuSend[0])), menuSend);
-      if (ButtonRead(analogRead(A0)) == 'l') {
+      if (subchoice == -1) {
         break;
       }
       else {
@@ -442,11 +453,11 @@ void loop() {
       switch (subchoice) {
 
         case 0:
-          calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+          calibrateButtons(basicButtons, basicButtonsAddr, sizeof(basicButtons) / sizeof(basicButtons[0]));
           break;
 
         case 1:
-          calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+          calibrateButtons(additionalButtons, additionalButtonsAddr, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
           break;
 
         case 2:
