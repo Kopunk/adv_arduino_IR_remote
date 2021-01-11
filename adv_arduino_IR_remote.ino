@@ -36,19 +36,10 @@ int eeAddress = 0;
 //constants for EEPROM addressing
 const int connectPCAddr = 0;
 const int basicButtonsAddr = 1;
-const int additionalButtonsAddr = 41;
-const int banksNamesAddr = 61;
-const int banksAddr = 201;
-const int otherSignals = 241;
-
-/* as replacement for above
-  const int connectPCAddr = 0;
-  const int basicButtonsAddr = 1;
-  const int additionalButtonsAddr = basicButtonsAddr + (4 * 10); // (4 * bankNo)
-  const int banksNamesAddr = additionalButtonsAddr + (4 * 5);
-  const int banksAddr = banksNamesAddr + (14 * 10);  // (bankNameLen * bankNo))
-  const int otherSignals = banksAddr + (4 * 10);
-*/
+const int additionalButtonsAddr = basicButtonsAddr + (4 * 10); // (4 * bankNo)
+const int banksNamesAddr = additionalButtonsAddr + (4 * 5);
+const int banksAddr = banksNamesAddr + (14 * 10);  // (bankNameLen * bankNo))
+const int otherSignals = banksAddr + (4 * 10);
 
 //constant for buzz pin
 //pin 15 is A1
@@ -127,6 +118,19 @@ long readHexFromEEPROM(int addr, int howMuch = 4) {
   return strtol(y.c_str(), NULL, 16);
 }
 
+
+void assignButtons(int len1, int len2, int addr1, int addr2) {
+  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
+  for (int i = 0; i < len1; i++) {
+    basicButtonsSignals[i] = readHexFromEEPROM(addr1);
+    addr1 = addr1 + 4;
+  }
+  for (int i = 0; i < len2; i++) {
+    additionalButtonsSignals[i] = readHexFromEEPROM(addr2);
+    addr2 = addr2 + 4;
+  }
+}
+
 void calibrateButtons(const String words[], int addr, const int len) {
   /*
      Used to calibrate basic remote buttons listed in words[].
@@ -201,17 +205,6 @@ void calibrateButtons(const String words[], int addr, const int len) {
   lcd.print("callibrated");
   delay(2000);
 }
-
-void assignButtons(int len1, int len2) {
-  //Reads the signal values stored in EEPROM and saves in arrays for ease of use
-  for (int i = 0; i < len1; i++) {
-    basicButtonsSignals[i] = readHexFromEEPROM(i * 4);
-  }
-  for (int i = len1; i < len2; i++) {
-    additionalButtonsSignals[i] = readHexFromEEPROM(i * 4);
-  }
-}
-
 
 char Menu(const byte rows, const char list[][maxColumns]) {
   /*
@@ -346,36 +339,10 @@ void forwardIR() {
     if (x == 123) {
       return;
     }
-
-    if (x == basicButtonsSignals[0]) {
-      sendIR(sequences[0], sizeof(sequences[0]) / sizeof(sequences[0][0]));
-    }
-    if (x == basicButtonsSignals[1]) {
-      sendIR(sequences[1], sizeof(sequences[1]) / sizeof(sequences[1][0]));
-    }
-    if (x == basicButtonsSignals[2]) {
-      sendIR(sequences[2], sizeof(sequences[2]) / sizeof(sequences[2][0]));
-    }
-    if (x == basicButtonsSignals[3]) {
-      sendIR(sequences[4], sizeof(sequences[3]) / sizeof(sequences[3][0]));
-    }
-    if (x == basicButtonsSignals[4]) {
-      sendIR(sequences[5], sizeof(sequences[4]) / sizeof(sequences[4][0]));
-    }
-    if (x == basicButtonsSignals[5]) {
-      sendIR(sequences[3], sizeof(sequences[5]) / sizeof(sequences[5][0]));
-    }
-    if (x == basicButtonsSignals[6]) {
-      sendIR(sequences[6], sizeof(sequences[6]) / sizeof(sequences[6][0]));
-    }
-    if (x == basicButtonsSignals[7]) {
-      sendIR(sequences[7], sizeof(sequences[7]) / sizeof(sequences[7][0]));
-    }
-    if (x == basicButtonsSignals[8]) {
-      sendIR(sequences[8], sizeof(sequences[8]) / sizeof(sequences[8][0]));
-    }
-    if (x == basicButtonsSignals[9]) {
-      sendIR(sequences[9], sizeof(sequences[9]) / sizeof(sequences[9][0]));
+    for (int i = 0; i < 10; i++) {
+      if (x == basicButtonsSignals[i]) {
+        sendIR(sequences[i], sizeof(sequences[i]) / sizeof(sequences[i][0]));
+      }
     }
   }
 }
@@ -397,8 +364,8 @@ void loadSequences(const int len1, const int len2, int addr) {
       addr++;
     }
   }
-
 }
+
 
 // reset program function
 void (*resetFunc) (void) = 0; //declare reset function at address 0
