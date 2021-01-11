@@ -2,21 +2,20 @@ void writeDefaultBanknames(int banksNamesAddr = 61, int EObanksNamesAddr = 201) 
   const char bankNameLen = 14;
   const char bankNo = 10;
   char menuSend[bankNo][bankNameLen] = {
-    "Bank #0   ",
-    "Bank #1    ",
-    "Bank #2   ",
-    "Bank #3    ",
-    "Bank #    ",
-    "Bank #5    ",
-    "Bank #6    ",
-    "Bank #7   ",
-    "Bank #8   ",
-    "Bank #9   "
+    "Bank #0",
+    "Bank #1",
+    "Bank #2",
+    "Bank #3",
+    "Bank #4",
+    "Bank #5",
+    "Bank #6",
+    "Bank #7",
+    "Bank #8",
+    "Bank #9"
   };
 
-  // this crashes arduino
   for (int i = banksNamesAddr; i < EObanksNamesAddr; i++) {
-    EEPROM.update(i, menuSend[(i-banksNamesAddr)/bankNameLen][(i-banksNamesAddr)%bankNameLen]);
+    EEPROM.update(i, menuSend[(i - banksNamesAddr) / bankNameLen][(i - banksNamesAddr) % bankNameLen]);
   }
 }
 

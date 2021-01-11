@@ -368,10 +368,8 @@ void loadSequences(const int len1, const int len2, int addr) {
 void loadBankNames() {
   buzz(4);
   const char bankNameLen = 14;
-  for (int j = banksNamesAddr; j < banksAddr; j = j + bankNameLen) {
-    for (int i = 0; i < bankNameLen; i++) {
-      menuSend[j][i] = EEPROM.read(j + i);
-    }
+  for (int i = banksNamesAddr; i < banksAddr; i++) {
+    menuSend[(i - banksNamesAddr) / bankNameLen][(i - banksNamesAddr) % bankNameLen] = EEPROM.read(i);
   }
 }
 
