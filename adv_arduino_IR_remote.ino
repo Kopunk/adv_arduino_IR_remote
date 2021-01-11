@@ -363,7 +363,16 @@ void loadSequences(const int len1, const int len2, int addr) {
       addr++;
     }
   }
+}
 
+void loadBankNames() {
+  buzz(4);
+  const char bankNameLen = 14;
+  for (int j = banksNamesAddr; j < banksAddr; j = j + bankNameLen) {
+    for (int i = 0; i < bankNameLen; i++) {
+      menuSend[j][i] = EEPROM.read(j + i);
+    }
+  }
 }
 
 // setup() and loop() ----------
@@ -372,9 +381,26 @@ void setup() {
   pinMode(buzzPin, OUTPUT);  // buzzPin defined in Buzz.h
   buzz(1);
 
-  
-
   lcd.begin(16, 2);
+
+  byte connPC = EEPROM.read(0);
+  // load defaults to EEPROM
+  if (connPC == 255)  {
+    lcd.print("LOADING DEFAULTS");
+    writeDefaultBanknames(banksNamesAddr, banksAddr);
+    writeDefaultBanks(banksAddr);
+    EEPROM.update(0, 0);
+  }
+  // // enable pc communication
+  // if (connPC == 1) {
+  //   lcd.print("PC CONN MODE");
+  //   pcMode();
+  //   EEPROM.update(connectPCAddr, 0);
+  // }
+
+  // load data from EEPROM
+  loadBankNames();
+
   Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
