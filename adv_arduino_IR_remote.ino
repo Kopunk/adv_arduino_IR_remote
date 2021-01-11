@@ -400,8 +400,8 @@ void setup() {
   if (connPC == 1) {
     //Serial.end();
     lcd.print("PC CONN MODE");
-    pcMode(menuSend);
-    EEPROM.update(connectPCAddr, 0);
+    //pcMode(menuSend);
+    //EEPROM.update(connectPCAddr, 0);
   }
 
   //Serial.begin(9600);
@@ -444,7 +444,9 @@ void loop() {
 
       EEPROM.update(connectPCAddr, 1);
       delay(2000);
-      resetFunc();  // start program from 0
+
+      pcMode(menuSend);
+      //resetFunc();  // start program from 0
       break;
 
     case 4: // "Settings"

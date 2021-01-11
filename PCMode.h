@@ -6,9 +6,7 @@ void pcMode(char bankName[bankNo][bankNameLen], int banksNamesAddr=61, int EOban
     while(!Serial) {}
 
     for (int i = 0; i < bankNo; i++) {
-        if (i % bankNameLen == 0) {
-            Serial.println(bankName[i/bankNameLen]);
-        }
+        Serial.println(bankName[i]);
     }
     // while (true) {} // temporairly
     Serial.end();
