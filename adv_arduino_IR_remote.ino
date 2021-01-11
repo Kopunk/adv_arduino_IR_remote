@@ -2,6 +2,7 @@
 #include <IRremote.h>
 #include <EEPROM.h>
 #include "Buzz.h"
+#include "WriteDefaults.h"
 
 // Buzz includes buzz() function:
 // takes char argument 0 - 4 or other for default
