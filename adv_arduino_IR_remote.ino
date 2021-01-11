@@ -24,7 +24,7 @@ const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Optio
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
 const char menuSettings[][maxColumns] = {"Cal. basic", "Cal. addit.", "Test Buzzer"};
 // menus available for user option naming
-char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
+char menuSend[10][maxColumns]; // = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
 
 // variables for handling Menu() in loop()
 char choice = -1;
@@ -371,6 +371,8 @@ void loadSequences(const int len1, const int len2, int addr) {
 void setup() {
   pinMode(buzzPin, OUTPUT);  // buzzPin defined in Buzz.h
   buzz(1);
+
+  
 
   lcd.begin(16, 2);
   Serial.begin(9600);

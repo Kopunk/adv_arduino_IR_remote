@@ -19,7 +19,7 @@ void writeDefaultBanknames(int banksNamesAddr=61, int EObanksNamesAddr=201) {
 
 }
 
-void writeDefaultBanks() {
+void writeDefaultBanks(int banksAddr = 201) {
       int i = 173;
   //Bank 1
   EEPROM.put(i, '0');
