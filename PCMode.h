@@ -1,17 +1,14 @@
 const char bankNo = 10;
 const char bankNameLen = 14;
 
-void pcMode(int banksNamesAddr=61, int EObanksNamesAddr=201) {
-    char bankName[bankNameLen] = "";
-
+void pcMode(char bankName[bankNo][bankNameLen], int banksNamesAddr=61, int EObanksNamesAddr=201) {
     Serial.begin(9600);
     while(!Serial) {}
 
-    for (int j = banksNamesAddr; j < EObanksNamesAddr; j = j + bankNameLen) {
-        for (int i = 0; i < bankNameLen; i++) {
-            bankName[i] = char(EEPROM.read(j+i));
+    for (int i = 0; i < bankNo; i++) {
+        if (i % bankNameLen == 0) {
+            Serial.println(bankName[i/bankNameLen]);
         }
-        Serial.println(bankName);
     }
     // while (true) {} // temporairly
     Serial.end();

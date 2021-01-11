@@ -34,16 +34,16 @@ combobox_port.pack(pady=10)
 button_confirm_port.pack(pady=10)
 
 window_port.mainloop()
-print(choice_port.get())
+# print(choice_port.get())
 
-with serial.Serial(port="COM5", baudrate=9600, timeout=3) as ser:
+with serial.Serial(port=choice_port.get(), baudrate=9600, timeout=3) as ser:
 
     while not ser.in_waiting:
         pass
     else:
         while ser.in_waiting:
             line = ser.readline()
-            line = line.decode("ascii")[:-2]  # delete \n\r
+            line = line.decode()[:-2]  # delete \n\r
             read_banknames.append(line)
 
 

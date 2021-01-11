@@ -73,7 +73,7 @@ void sendIR(const long signals[], const int len, const String protocol = "LG") {
     if (signals[x] != 0) {
       if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
-        Serial.println(signals[x]); //Debug
+        //Serial.println(signals[x]); //Debug
       }
       delay(1000);
     }
@@ -385,6 +385,9 @@ void setup() {
 
   lcd.begin(16, 2);
 
+  // load data from EEPROM
+  loadBankNames();
+
   byte connPC = EEPROM.read(0);
   // load defaults to EEPROM
   if (connPC == 255)  {
@@ -393,22 +396,20 @@ void setup() {
     writeDefaultBanks(banksAddr);
     EEPROM.update(0, 0);
   }
-  // // enable pc communication
-  // if (connPC == 1) {
-  //   lcd.print("PC CONN MODE");
-  //   pcMode();
-  //   EEPROM.update(connectPCAddr, 0);
-  // }
+  // enable pc communication
+  if (connPC == 1) {
+    //Serial.end();
+    lcd.print("PC CONN MODE");
+    pcMode(menuSend);
+    EEPROM.update(connectPCAddr, 0);
+  }
 
-  // load data from EEPROM
-  loadBankNames();
-
-  Serial.begin(9600);
+  //Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   for (int i = 0; i < 9; i++) {
-    Serial.println(basicButtonsSignals[i], HEX);
+    //Serial.println(basicButtonsSignals[i], HEX);
   }
 }
 
@@ -440,6 +441,7 @@ void loop() {
 
     case 3: // "Connect PC"
       lcd.print("Connect PC");
+
       EEPROM.update(connectPCAddr, 1);
       delay(2000);
       resetFunc();  // start program from 0
