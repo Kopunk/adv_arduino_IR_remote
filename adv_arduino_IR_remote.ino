@@ -87,7 +87,7 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return 123;
     }
-    
+
     if (irrecv.decode(&results)) {
       if (results.value == skip) {
         irrecv.resume();
@@ -332,40 +332,14 @@ void forwardIR() {
     }
 
     long x = receiveSignal();
-    
-    if (x == 123){
+
+    if (x == 123) {
       return;
     }
-    
-    if (x == basicButtonsSignals[0]) {
-      sendIR(sequences[0], sizeof(sequences[0]) / sizeof(sequences[0][0]));
-    }
-    if (x == basicButtonsSignals[1]) {
-      sendIR(sequences[1], sizeof(sequences[1]) / sizeof(sequences[1][0]));
-    }
-    if (x == basicButtonsSignals[2]) {
-      sendIR(sequences[2], sizeof(sequences[2]) / sizeof(sequences[2][0]));
-    }
-    if (x == basicButtonsSignals[3]) {
-      sendIR(sequences[4], sizeof(sequences[3]) / sizeof(sequences[3][0]));
-    }
-    if (x == basicButtonsSignals[4]) {
-      sendIR(sequences[5], sizeof(sequences[4]) / sizeof(sequences[4][0]));
-    }
-    if (x == basicButtonsSignals[5]) {
-      sendIR(sequences[3], sizeof(sequences[5]) / sizeof(sequences[5][0]));
-    }
-    if (x == basicButtonsSignals[6]) {
-      sendIR(sequences[6], sizeof(sequences[6]) / sizeof(sequences[6][0]));
-    }
-    if (x == basicButtonsSignals[7]) {
-      sendIR(sequences[7], sizeof(sequences[7]) / sizeof(sequences[7][0]));
-    }
-    if (x == basicButtonsSignals[8]) {
-      sendIR(sequences[8], sizeof(sequences[8]) / sizeof(sequences[8][0]));
-    }
-    if (x == basicButtonsSignals[9]) {
-      sendIR(sequences[9], sizeof(sequences[9]) / sizeof(sequences[9][0]));
+    for (int i = 0; i < 10; i++) {
+      if (x == basicButtonsSignals[i]) {
+        sendIR(sequences[i], sizeof(sequences[i]) / sizeof(sequences[i][0]));
+      }
     }
   }
 }
@@ -401,7 +375,7 @@ void setup() {
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]) );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
-  for(int i = 0; i < 9; i++){
+  for (int i = 0; i < 9; i++) {
     Serial.println(basicButtonsSignals[i], HEX);
   }
 }
@@ -421,7 +395,7 @@ void loop() {
       if (ButtonRead(analogRead(A0)) == 'l') {
         break;
       }
-      else{
+      else {
         sendIR(sequences[subchoice], sizeof(sequences[subchoice]) / sizeof(sequences[subchoice][0]));
       }
       break;
@@ -442,19 +416,19 @@ void loop() {
       if (ButtonRead(analogRead(A0)) == 'l') {
         break;
       }
-      switch(subchoice){
+      switch (subchoice) {
 
         case 0:
-        calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
-        break;
+          calibrateButtons(basicButtons, 0, sizeof(basicButtons) / sizeof(basicButtons[0]));
+          break;
 
         case 1:
-        calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
-        break;
+          calibrateButtons(additionalButtons, 10 * 4, sizeof(additionalButtons) / sizeof(additionalButtons[0]));
+          break;
 
         case 2:
-        buzz();
-        break;
+          buzz();
+          break;
       }
       break;
 
