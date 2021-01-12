@@ -8,6 +8,6 @@ void pcMode(char bankName[bankNo][bankNameLen], int banksNamesAddr=61, int EOban
     for (int i = 0; i < bankNo; i++) {
         Serial.println(bankName[i]);
     }
-    // while (true) {} // temporairly
+    //while (true) {} // temporairly
     Serial.end();
 }

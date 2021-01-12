@@ -9,12 +9,9 @@ comports = [comport.device for comport in serial.tools.list_ports.comports()]
 BANK_NO = 10  # number of banks
 BANK_NAME_LEN = 14  # number of characters in each bank name
 banknames = []  # bank names to be displayed
-read_banknames = ["" for i in range(BANK_NO)]  # bank names read from arduino
+read_banknames = []  # bank names read from arduino
 
 # port choice window -----------------------------------------------------------
-# port choice_port functions
-def click_confirm_port():
-    window_port.destroy()
 
 # window_port instance
 window_port = tk.Tk()
@@ -36,14 +33,25 @@ button_confirm_port.pack(pady=10)
 window_port.mainloop()
 # print(choice_port.get())
 
-with serial.Serial(port=choice_port.get(), baudrate=9600, timeout=3) as ser:
+
+with serial.Serial(port=choice_port.get(), baudrate=9600, timeout=10) as ser:
+
+    # popup window indicating to select PC mode on arduino
+    window_popup_wait = tk.Tk()
+    name_lbl = tk.Label(text="Select 'Connect PC' on arduino")
+    name_lbl.pack(padx=15, pady=15)
 
     while not ser.in_waiting:
-        pass
+        # update window without blocking (instead of mainloop())
+        window_popup_wait.update_idletasks()
+        window_popup_wait.update()
     else:
+        window_popup_wait.destroy()  # close the popup window
+
+        # receive data from arduino
         while ser.in_waiting:
             line = ser.readline()
-            line = line.decode()[:-2]  # delete \n\r
+            line = line.decode()[:-2]  # delete \r\n
             read_banknames.append(line)
 
 
@@ -76,9 +84,9 @@ button_load_preset = tk.Button(text="Load file")
 
 # grid widgets
 name_lbl.grid(column=0, row=0, pady=10)
-for i in range(BANK_NO): banknames[i].grid(column=0, row=i+1)
-button_saveto_arduino.grid(column=1, row=BANK_NO-2)
-button_saveto_txt.grid(column=1, row=BANK_NO-1)
-button_load_preset.grid(column=1, row=BANK_NO)
+for i in range(BANK_NO): banknames[i].grid(padx=5, pady=5, column=0, row=i+1)
+button_saveto_arduino.grid(padx=7, column=1, row=BANK_NO-2)
+button_saveto_txt.grid(padx=7, column=1, row=BANK_NO-1)
+button_load_preset.grid(padx=7, column=1, row=BANK_NO)
 
 window_main.mainloop()
