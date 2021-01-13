@@ -2,6 +2,7 @@
 #include <IRremote.h>
 #include <EEPROM.h>
 #include "Buzz.h"
+#include "WriteDefaults.h"
 
 // Buzz includes buzz() function:
 // takes char argument 0 - 4 or other for default
@@ -23,7 +24,7 @@ const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Optio
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
 const char menuSettings[][maxColumns] = {"Cal. basic", "Cal. addit.", "Test Buzzer"};
 // menus available for user option naming
-char menuSend[][maxColumns] = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
+char menuSend[10][maxColumns]; // = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
 
 // variables for handling Menu() in loop()
 char choice = -1;
@@ -362,7 +363,14 @@ void loadSequences(const int len1, const int len2, int addr) {
       addr++;
     }
   }
+}
 
+void loadBankNames() {
+  buzz(4);
+  const char bankNameLen = 14;
+  for (int i = banksNamesAddr; i < banksAddr; i++) {
+    menuSend[(i - banksNamesAddr) / bankNameLen][(i - banksNamesAddr) % bankNameLen] = EEPROM.read(i);
+  }
 }
 
 // setup() and loop() ----------
@@ -372,6 +380,25 @@ void setup() {
   buzz(1);
 
   lcd.begin(16, 2);
+
+  byte connPC = EEPROM.read(0);
+  // load defaults to EEPROM
+  if (connPC == 255)  {
+    lcd.print("LOADING DEFAULTS");
+    writeDefaultBanknames(banksNamesAddr, banksAddr);
+    writeDefaultBanks(banksAddr);
+    EEPROM.update(0, 0);
+  }
+  // // enable pc communication
+  // if (connPC == 1) {
+  //   lcd.print("PC CONN MODE");
+  //   pcMode();
+  //   EEPROM.update(connectPCAddr, 0);
+  // }
+
+  // load data from EEPROM
+  loadBankNames();
+
   Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
