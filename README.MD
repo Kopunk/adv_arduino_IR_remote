@@ -35,7 +35,22 @@ Projekt ma za zadanie umożliwić rozbudowaną komunikacje pilot<->arduino<->odb
 - <Tutaj link do grafiki z fritzinga>
 
 ## Menu i Nawigacja
-Użytkownik wybiera funkcjonalność przy pomocy przycisków **up** / **down** i zatwierdza lub przechodzi do niższego menu przy pomocy **select** lub **right**, cofnięcie lub anulowanie operacji następuje po naciśnięciu **left**.
+Użytkownik wybiera funkcjonalność przy pomocy przycisków **up** / **down** i zatwierdza lub przechodzi do niższego menu przy pomocy **select** lub **right**, cofnięcie lub anulowanie operacji następuje po naciśnięciu **left**. <br>
+Drzewko menu oraz submenu:
+```
+Menu
+├─ Forward IR
+├─ Send IR
+│  ├─ Bank #1
+│  ├─ ...
+│  ├─ Bank #9
+├─ Receive IR
+├─ Connect PC
+├─ Settings
+│  ├─ Calibrate Basic Buttons
+│  ├─ Calibrate Additional Buttons
+│  ├─ Test Buzzer
+```
 
 ## Kalibracja
 Po wybraniu kalibracji użytkownik musi klikać 3-krotnie przyciski wyświetlone na ekranie. Przez zakłócenia oraz inne zmienne otoczenia dopiero po otrzymaniu 3-krotnie tego samego sygnału możemy być pewni że kalibracja przebiegła prawidłowo.
