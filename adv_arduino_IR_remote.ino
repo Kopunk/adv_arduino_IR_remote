@@ -2,6 +2,7 @@
 #include <IRremote.h>
 #include <EEPROM.h>
 #include "Buzz.h"
+#include "PCMode.h"
 #include "WriteDefaults.h"
 
 // Buzz includes buzz() function:
@@ -24,7 +25,7 @@ const char option[][maxColumns] = {"Option 1", "-Option 2", "Option 3", "--Optio
 const char menuMain[][maxColumns] = {"Forward IR", "Send IR", "Receive IR", "Connect PC", "Settings"};
 const char menuSettings[][maxColumns] = {"Cal. basic", "Cal. addit.", "Test Buzzer"};
 // menus available for user option naming
-char menuSend[10][maxColumns]; // = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
+char menuSend[bankNo][maxColumns]; // = {"Bank #1", "Bank #2", "Bank #3", "Bank #4", "Bank #5", "Bank #6", "Bank #7", "Bank #8", "Bank #9", "Bank #10"};
 
 // variables for handling Menu() in loop()
 char choice = -1;
@@ -72,7 +73,7 @@ void sendIR(const long signals[], const int len, const String protocol = "LG") {
     if (signals[x] != 0) {
       if (protocol == "LG") {
         irsend.sendLG(signals[x], 32);
-        Serial.println(signals[x]); //Debug
+        //Serial.println(signals[x]); //Debug
       }
       delay(1000);
     }
@@ -373,6 +374,9 @@ void loadBankNames() {
   }
 }
 
+// reset program function
+void (*resetFunc) (void) = 0; //declare reset function at address 0
+
 // setup() and loop() ----------
 
 void setup() {
@@ -380,6 +384,9 @@ void setup() {
   buzz(1);
 
   lcd.begin(16, 2);
+
+  // load data from EEPROM
+  loadBankNames();
 
   byte connPC = EEPROM.read(0);
   // load defaults to EEPROM
@@ -389,22 +396,20 @@ void setup() {
     writeDefaultBanks(banksAddr);
     EEPROM.update(0, 0);
   }
-  // // enable pc communication
-  // if (connPC == 1) {
-  //   lcd.print("PC CONN MODE");
-  //   pcMode();
-  //   EEPROM.update(connectPCAddr, 0);
-  // }
+  // enable pc communication
+  if (connPC == 1) {
+    //Serial.end();
+    lcd.print("PC CONN MODE");
+    //pcMode(menuSend);
+    //EEPROM.update(connectPCAddr, 0);
+  }
 
-  // load data from EEPROM
-  loadBankNames();
-
-  Serial.begin(9600);
+  //Serial.begin(9600);
   irrecv.enableIRIn();
   assignButtons(sizeof(basicButtonsSignals) / sizeof(basicButtonsSignals[0]), sizeof(additionalButtonsSignals) / sizeof(additionalButtonsSignals[0]), basicButtonsAddr, additionalButtonsAddr );
   loadSequences(sizeof(sequences) / sizeof(sequences[0]), sizeof(sequences[0]) / sizeof(sequences[0][0]), banksAddr);
   for (int i = 0; i < 9; i++) {
-    Serial.println(basicButtonsSignals[i], HEX);
+    //Serial.println(basicButtonsSignals[i], HEX);
   }
 }
 
@@ -436,7 +441,12 @@ void loop() {
 
     case 3: // "Connect PC"
       lcd.print("Connect PC");
+
+      EEPROM.update(connectPCAddr, 1);
       delay(2000);
+
+      pcMode(menuSend);
+      //resetFunc();  // start program from 0
       break;
 
     case 4: // "Settings"
