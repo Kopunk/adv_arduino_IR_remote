@@ -3,13 +3,20 @@
 import tkinter as tk
 import serial  # baud 9600
 import serial.tools.list_ports  # for listing comports
+from time import sleep
 
 comports = [comport.device for comport in serial.tools.list_ports.comports()]
 
 BANK_NO = 10  # number of banks
 BANK_NAME_LEN = 14  # number of characters in each bank name
+SEQUENCE_LEN = 4 * BANK_NO  # total number of signals in all sequences
+BUTTON_NO = 15  # total number of buttons(' signals)
 banknames = []  # bank names to be displayed
 read_banknames = []  # bank names read from arduino
+
+
+
+is_write_to_EEPROM = 0  # sent to arduino to inicate whether EEPROM will be updated
 
 # port choice window -----------------------------------------------------------
 
@@ -33,26 +40,55 @@ button_confirm_port.pack(pady=10)
 window_port.mainloop()
 # print(choice_port.get())
 
+# open serial connection
+# with serial.Serial(port=choice_port.get(), baudrate=9600, timeout=10) as ser:
+ser = serial.Serial(port=choice_port.get(), baudrate=9600)
 
-with serial.Serial(port=choice_port.get(), baudrate=9600, timeout=10) as ser:
+# popup window indicating to select PC mode on arduino
+window_popup_wait = tk.Tk()
+name_lbl = tk.Label(text="Select 'Connect PC' on arduino")
+name_lbl.pack(padx=15, pady=15)
 
-    # popup window indicating to select PC mode on arduino
-    window_popup_wait = tk.Tk()
-    name_lbl = tk.Label(text="Select 'Connect PC' on arduino")
-    name_lbl.pack(padx=15, pady=15)
+while not ser.in_waiting:
+    # update window without blocking (instead of mainloop())
+    window_popup_wait.update_idletasks()
+    window_popup_wait.update()
+else:
+    window_popup_wait.destroy()  # close the popup window
 
-    while not ser.in_waiting:
-        # update window without blocking (instead of mainloop())
-        window_popup_wait.update_idletasks()
-        window_popup_wait.update()
-    else:
-        window_popup_wait.destroy()  # close the popup window
+    # receive data from arduino
+    with open("temp", "w") as f:
+        for i in range(BUTTON_NO):
+            while not ser.in_waiting: pass
+            readln = ser.readline()
+            readln = readln.decode()
+            readln = readln[:-2] if readln[-2:] == "\r\n" else readln
+            f.write(f"{readln}\n")
+            print(readln)
+            #sleep(.01)
 
-        # receive data from arduino
-        while ser.in_waiting:
-            line = ser.readline()
-            line = line.decode()[:-2]  # delete \r\n
-            read_banknames.append(line)
+        for i in range(BANK_NO):
+            while not ser.in_waiting: pass
+            readln = ser.readline()
+            readln = readln.decode()
+            readln = readln[:-2] if readln[-2:] == "\r\n" else readln
+            f.write(f"{readln}\n")
+            print(readln)
+            #sleep(.01)
+            read_banknames.append(readln)  # to display banknames
+
+        for i in range(SEQUENCE_LEN):
+            while not ser.in_waiting: pass
+            readln = ser.readline()
+            readln = readln.decode()
+            readln = readln[:-2] if readln[-2:] == "\r\n" else readln
+            f.write(f"{readln}\n")
+            print(readln)
+            #sleep(.01)
+
+        assert not ser.in_waiting, "Too many bytes in buffer."
+
+        # ser.write((2).to_bytes(length=1, byteorder='little'))
 
 
 # window_main instance ---------------------------------------------------------
@@ -62,31 +98,101 @@ window_main.title("Adv IR Remote Manager")
 
 # button functions
 
-def click_saveto_arduino():
-    pass
+def write_to_arduino(file_name):
+    ser.write((1).to_bytes(length=1, byteorder='little'))
+    with open(file_name, "r") as f_write:
+        ser.read()
+        ser.write("1".encode())
+        print("write signals")
+        for i in range(BUTTON_NO):
+            x = str(f_write.readline())
+            while x[-1] == "\n" or x[-1] == "\r":
+                x = x[:-1]
+            assert len(x) <= 11, "Sequence too big"
+            print(x)
+            ser.write(x.encode())
+            while not ser.in_waiting : sleep(.1)
+            else: ser.read()
 
-def click_saveto_txt():
-    pass
+            
+            # x = int(x).to_bytes(length=4, byteorder="little", signed=True)
+            # for y in x:
+            #     print(y)
+            #     ser.write(y)
+
+        print("write bankno")
+        for i in range(BANK_NO):
+            x = str(f_write.readline())
+            while x[-1] == "\n" or x[-1] == "\r" or len(x) > 14:
+                x = x[:-1]
+            print(x)
+            ser.write(x.encode())
+            sleep
+            while not ser.in_waiting : sleep(.1)
+            else: ser.read()
+
+        print("write seq")
+        for i in range(SEQUENCE_LEN):
+            x = f_write.readline()
+            while x[-1] == "\n" or x[-1] == "\r":
+                x = x[:-1]
+            print(x)
+            ser.write(x.encode())
+            while not ser.in_waiting : sleep(.1)
+            else: ser.read()
+
+
+
+def click_saveto_arduino():
+    with open("newpreset", "w") as f_new:
+        with open("temp", "r") as f_temp:
+            for i in range(BUTTON_NO):
+                f_new.write(f"{f_temp.readline()}")  # no newline needed
+            for i in range(BANK_NO):
+                f_new.write(f"{banknames[i].get()}\n")
+                f_temp.readline()
+            for i in range(SEQUENCE_LEN):
+                f_new.write(f"{f_temp.readline()}")  # no newline needed
+    write_to_arduino("newpreset")
+
 
 def click_load_preset():
-    pass
+    file_name = entry_file_name.get()
+    try:
+        with open(file_name, "r") as f:
+            pass
+        write_to_arduino(file_name)
+    except:
+        write_to_arduino("temp")
 
-# adding wdgets
+# adding widgets
 
 name_lbl = tk.Label(text="Bank name")
 
-banknames = [tk.Entry(window_main, width=15) for i in range(BANK_NO)]
-for i in range(BANK_NO): banknames[i].insert(index=0, string=read_banknames[i])
+label_file_name = tk.Label(text="Preset file name")
 
-button_saveto_arduino = tk.Button(text="Save to Arduino")
-button_saveto_txt = tk.Button(text="Save to text file")
-button_load_preset = tk.Button(text="Load file")
+entry_file_name = tk.Entry(window_main, width=15)
+entry_file_name.insert(index=0, string="preset.txt")
+
+# add all bankname entry spaces at once
+banknames = [tk.Entry(window_main, width=15) for i in range(BANK_NO)]
+for i in range(BANK_NO): 
+    banknames[i].insert(index=0, string=read_banknames[i])
+
+button_saveto_arduino = tk.Button(text="Save to Arduino", command=click_saveto_arduino)
+button_load_preset = tk.Button(text="Load preset", command=click_load_preset)
 
 # grid widgets
-name_lbl.grid(column=0, row=0, pady=10)
-for i in range(BANK_NO): banknames[i].grid(padx=5, pady=5, column=0, row=i+1)
-button_saveto_arduino.grid(padx=7, column=1, row=BANK_NO-2)
-button_saveto_txt.grid(padx=7, column=1, row=BANK_NO-1)
+name_lbl.grid(column=0, row=0, pady=3)
+for i in range(BANK_NO): 
+    banknames[i].grid(padx=5, pady=5, column=0, row=i+1)
+button_saveto_arduino.grid(padx=7, column=1, row=BANK_NO-1)
 button_load_preset.grid(padx=7, column=1, row=BANK_NO)
 
+label_file_name.grid(column=1, row=0, pady=3)
+entry_file_name.grid(padx=5, pady=5, column=1, row=1)
+
 window_main.mainloop()
+
+ser.write((2).to_bytes(length=1, byteorder='little'))
+ser.close()
