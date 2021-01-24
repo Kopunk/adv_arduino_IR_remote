@@ -27,6 +27,7 @@ Projekt ma za zadanie umożliwić rozbudowaną komunikacje pilot<->arduino<->odb
    - PySerial
    - Tkinter
    - Time
+   - os
 3. Pliki projektu:
    - adv_arduino_IR_remote.ino
    - WriteDefaults.h
