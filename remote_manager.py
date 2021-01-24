@@ -4,6 +4,8 @@ import tkinter as tk
 import serial  # baud 9600
 import serial.tools.list_ports  # for listing comports
 from time import sleep
+import os
+THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 
 comports = [comport.device for comport in serial.tools.list_ports.comports()]
 
@@ -57,7 +59,7 @@ else:
     window_popup_wait.destroy()  # close the popup window
 
     # receive data from arduino
-    with open("temp", "w") as f:
+    with open(os.path.join(THIS_FOLDER, 'temp'), "w") as f:
         for i in range(BUTTON_NO):
             while not ser.in_waiting: pass
             readln = ser.readline()
@@ -100,7 +102,7 @@ window_main.title("Adv IR Remote Manager")
 
 def write_to_arduino(file_name):
     ser.write((1).to_bytes(length=1, byteorder='little'))
-    with open(file_name, "r") as f_write:
+    with open(os.path.join(THIS_FOLDER, file_name), "r") as f_write:
         ser.read()
         ser.write("1".encode())
         print("write signals")
@@ -144,8 +146,8 @@ def write_to_arduino(file_name):
 
 
 def click_saveto_arduino():
-    with open("newpreset", "w") as f_new:
-        with open("temp", "r") as f_temp:
+    with open(os.path.join(THIS_FOLDER, 'newpreset'), "w") as f_new:
+        with open(os.path.join(THIS_FOLDER, 'temp'), "r") as f_temp:
             for i in range(BUTTON_NO):
                 f_new.write(f"{f_temp.readline()}")  # no newline needed
             for i in range(BANK_NO):
@@ -159,7 +161,7 @@ def click_saveto_arduino():
 def click_load_preset():
     file_name = entry_file_name.get()
     try:
-        with open(file_name, "r") as f:
+        with open(os.path.join(THIS_FOLDER, file_name), "r") as f:
             pass
         write_to_arduino(file_name)
     except:

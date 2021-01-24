@@ -105,7 +105,7 @@ void loadSequences() {
         sequences[j][i] = additionalButtonsSignals[read];
       }
       else {
-        buzz(); buzz(); buzz(); // error - wrongly programmed sequence
+        sequences[j][i] = 0; // wrongly programmed sequence
       }
       // Serial.println(read); // DEBUGGING
     }
@@ -348,12 +348,12 @@ void PCsendSequences() {
   for (int j = 0; j < bankNo; j++) {
     for (int i = 0; i < sequenceLen; i++) {
       read = EEPROM.read(addr++);
-      if (read < 15 || read == 255) {
+//      if (read < 15 || read == 255) {
         Serial.println(read);
-      }
-      else {
-        buzz(); buzz(); buzz(); // error - wrongly programmed sequence
-      }
+//      }
+//      else {
+//        buzz(); buzz(); buzz(); // error - wrongly programmed sequence
+//      }
     }
   }
 }
@@ -366,7 +366,7 @@ void PCreceiveUpdateEEPROM() {
   unsigned char read = 0;
   char readChr[14];  // 11 is max no of chars that written long can take
   String readStr = "";
-  char addr = basicButtonsSignalsAddr;
+  int addr = basicButtonsSignalsAddr;
   long signal;
 
   Serial.write(1); // write 1 byte to start
