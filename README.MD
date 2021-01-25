@@ -36,11 +36,14 @@ Projekt ma za zadanie umożliwić rozbudowaną komunikacje pilot<->arduino<->odb
    - preset.txt
    - README.MD
 
-### Opis Podłączenia
+### Opis i Schemat Podłączenia
 - Odbiornik IR -> Digital pin 2
 - Nadajnik IR -> Digital pin 3
 - Buzzer -> Analog pin 1
-- <Tutaj link do grafiki z fritzinga>
+
+Na Adruino musi być nałożony LCD Keypad Shield, jego konfiguracja jest ustalana w programie.
+
+![schemat połączenia](https://drive.google.com/uc?export=view&id=1RT9LvYcsFgt3r--vA_sCuyfGzunAGovh)
 
 # Szczegółowe Omówienie Działania i Użytkowania
 
