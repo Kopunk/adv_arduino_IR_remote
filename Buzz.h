@@ -15,6 +15,7 @@ void buzzNote(unsigned int freq = 300, unsigned int len = 200) {
   }
 }
 
+// 0: tritone down; 1: tritone up; 2: -|-|-; 3: 4down; 4: -|-|-|-|-; 5: 4up
 void buzz(char choice = -1) {
   /*
      Plays melody (sequence of notes)
@@ -54,6 +55,12 @@ void buzz(char choice = -1) {
       buzzNote(1000, 30);
       buzzNote(1200, 30);
       buzzNote(1400, 30);
+      break;
+    case 5:  // 4 up
+      buzzNote(1100, 100);
+      buzzNote(1000, 100);
+      buzzNote(900, 100);
+      buzzNote(800, 100);
       break;
     default:  // error
       buzzNote(1400, 30);
