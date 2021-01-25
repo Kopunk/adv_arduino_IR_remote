@@ -104,7 +104,6 @@ def write_to_arduino(file_name):
     ser.write((1).to_bytes(length=1, byteorder='little'))
     with open(os.path.join(THIS_FOLDER, file_name), "r") as f_write:
         ser.read()
-        ser.write("1".encode())
         print("write signals")
         for i in range(BUTTON_NO):
             x = str(f_write.readline())

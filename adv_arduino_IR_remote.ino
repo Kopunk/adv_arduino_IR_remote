@@ -213,6 +213,7 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
     Awaits a signal and returns it. You can also specify
     a 'skip' signal which the function will ignore and wait for next one.
   */
+  irrecv.enableIRIn();
   while (true) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return 123;
@@ -232,12 +233,13 @@ long receiveSignal(const long skip = 0xFFFFFFFF) {
 
 void forwardIR() {
   //sends sequences of signals depending on received signal
+  long x;
   while (true) {
     if (ButtonRead(analogRead(A0)) == 'l') {
       return;
     }
 
-    long x = receiveSignal();
+    x = receiveSignal();
 
     if (x == 123) {
       return;
@@ -266,6 +268,7 @@ void sendIR(long signalSequence[sequenceLen]) {
       delay(1000);
     }
   }
+  irrecv.enableIRIn();
 }
 
 void receiveIR() {
@@ -370,7 +373,7 @@ void PCreceiveUpdateEEPROM() {
   long signal;
 
   Serial.write(1); // write 1 byte to start
-  Serial.read();
+  
 
   // buttons' signals
   lcd.clear();
